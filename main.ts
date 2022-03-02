@@ -5,11 +5,13 @@ import { TFile, WorkspaceLeaf, ViewState, normalizePath } from "obsidian";
 interface PluginSettings {
 	endOfDayTime: string;
 	alwaysOpenNewTab: boolean;
+	backgroundColor: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
 	alwaysOpenNewTab: false,
+	backgroundColor: '#fefaea',
 }
 
 const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => {
@@ -26,6 +28,11 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => 
 	return todayPath
 }
 
+const addTodayNoteClass = (leaf: WorkspaceLeaf) => {
+	const el: HTMLElement = leaf.containerEl
+	el.addClass('is-today-note')
+}
+
 const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNotesSettings: any) => {
 	const todayPath = getTodayNotePath(settings, dailyNotesSettings)
 
@@ -37,7 +44,7 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 	// try to find a existing tab
 	var todayNoteLeaf: WorkspaceLeaf
 	app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-		const { file } = leaf.view
+		const file: TFile = leaf.view.file
 		if (file && file.path === todayPath) {
 			todayNoteLeaf = leaf
 			return
@@ -45,6 +52,8 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 	})
 
 	if (todayNoteLeaf) {
+		addTodayNoteClass(todayNoteLeaf)
+
 		todayNoteLeaf.setViewState({
 			...todayNoteLeaf.getViewState(),
 		}, {focus: true})
@@ -56,20 +65,24 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 const openPathInNewTab = async (app: App, path: string) => {
 	const file = app.vault.getAbstractFileByPath(path) as TFile
 	// console.log('openPathInNewTab', file)
-	await openFile(app, file, {
+	const leaf = await openFile(app, file, {
 		openInNewTab: true,
 		direction: NewTabDirection.vertical,
 		focus: true,
 		mode: FileViewMode.default,
 	})
+	addTodayNoteClass(leaf)
 }
 
 export default class NewTabDailyPlugin extends Plugin {
 	settings: PluginSettings;
+	styleManager: StyleManger;
 
 	async onload() {
 		await this.loadSettings();
 		const dailyNotesSettings = this.app.internalPlugins.getPluginById('daily-notes').instance.options
+		this.styleManager = new StyleManger(this)
+		this.styleManager.setStyle()
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
@@ -86,7 +99,7 @@ export default class NewTabDailyPlugin extends Plugin {
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-today-daily-note-in-new-tab',
+			id: 'open-todays-daily-note-in-new-tab',
 			name: "Open today's daily note in new tab",
 			callback: async () => {
 				await openTodayNoteInNewTab(this.app, this.settings, dailyNotesSettings)
@@ -98,16 +111,11 @@ export default class NewTabDailyPlugin extends Plugin {
 	}
 
 	onunload() {
-
+		this.styleManager.cleanup()
 	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		/* TODO
-		- ensure the new tab is the only daily note opened
-		- day separator time
-		*/
-
 	}
 
 	async saveSettings() {
@@ -127,8 +135,6 @@ class SettingTab extends PluginSettingTab {
 		const {containerEl} = this;
 
 		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Daily notes new tab settings'});
 
 		const nowYMD = window.moment().format('yyyy-MM-DD')
 		const yesterdayYMD = window.moment().subtract(1, 'day').format('yyyy-MM-DD')
@@ -154,6 +160,19 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}
 			));
+
+		new Setting(containerEl)
+			.setName('Background color')
+			.setDesc(`Set background color for today's daily note`)
+			.addText(text => text
+				.setPlaceholder('RGB or Hex')
+				.setValue(this.plugin.settings.backgroundColor)
+				.onChange(async (value) => {
+					this.plugin.settings.backgroundColor = value;
+					await this.plugin.saveSettings();
+					this.plugin.styleManager.setStyle();
+				}
+			));
 	}
 }
 
@@ -165,7 +184,7 @@ enum NewTabDirection {
 	vertical = "vertical", horizontal = "horizontal"
 }
 
-export async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}) {
+async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
 	let leaf: WorkspaceLeaf;
 
 	if (optional?.openInNewTab && optional?.direction) {
@@ -182,5 +201,38 @@ export async function openFile(app: App, file: TFile, optional?: {openInNewTab?:
 					state: optional.mode && optional.mode !== 'default' ? {...leaf.view.getState(), mode: optional.mode} : leaf.view.getState(),
 					popstate: true,
 			} as ViewState, { focus: optional?.focus });
+	}
+	return leaf
+}
+
+class StyleManger  {
+	styleTag: HTMLStyleElement;
+	plugin: NewTabDailyPlugin;
+
+	constructor(plugin: NewTabDailyPlugin) {
+		this.plugin = plugin
+		this.styleTag = document.createElement('style')
+		this.styleTag.id = 'today-note-style'
+		document.getElementsByTagName("head")[0].appendChild(this.styleTag)
+	}
+
+	setStyle() {
+		const { backgroundColor } = this.plugin.settings
+		this.styleTag.innerText = `
+			.workspace-leaf.is-today-note .view-header,
+			.workspace-leaf.is-today-note .view-header > .view-actions {
+				background-color: ${backgroundColor} !important;
+			}
+
+			.workspace-leaf.is-today-note .markdown-source-view {
+				background-color: ${backgroundColor} !important;
+			}
+		`
+			.trim()
+      .replace(/[\r\n\s]+/g, " ")
+	}
+
+	cleanup() {
+		this.styleTag.remove()
 	}
 }
