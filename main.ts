@@ -1,6 +1,11 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { TFile, WorkspaceLeaf, ViewState, normalizePath } from "obsidian";
-
+import {
+	App, Notice, Plugin, PluginSettingTab, Setting,
+	TFile, WorkspaceLeaf, normalizePath
+} from 'obsidian';
+import {
+	openFile, NewTabDirection, FileViewMode,
+	getContainerElfromLeaf, getFileFromLeaf, getDailyNotesSettings,
+} from './utils'
 
 interface PluginSettings {
 	endOfDayTime: string;
@@ -29,7 +34,7 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => 
 }
 
 const addTodayNoteClass = (leaf: WorkspaceLeaf) => {
-	const el: HTMLElement = leaf.containerEl
+	const el = getContainerElfromLeaf(leaf)
 	el.addClass('is-today-note')
 }
 
@@ -44,7 +49,7 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 	// try to find a existing tab
 	var todayNoteLeaf: WorkspaceLeaf
 	app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-		const file: TFile = leaf.view.file
+		const file: TFile = getFileFromLeaf(leaf)
 		if (file && file.path === todayPath) {
 			todayNoteLeaf = leaf
 			return
@@ -80,24 +85,17 @@ export default class NewTabDailyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		const dailyNotesSettings = this.app.internalPlugins.getPluginById('daily-notes').instance.options
+		const dailyNotesSettings = getDailyNotesSettings(this.app)
 		this.styleManager = new StyleManger(this)
 		this.styleManager.setStyle()
 
-		// This creates an icon in the left ribbon.
+		// add sidebar button
 		const ribbonIconEl = this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
 			await openTodayNoteInNewTab(this.app, this.settings, dailyNotesSettings);
 			new Notice("Today's daily note opened");
 		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
+		// add command
 		this.addCommand({
 			id: 'open-todays-daily-note-in-new-tab',
 			name: "Open today's daily note in new tab",
@@ -106,7 +104,7 @@ export default class NewTabDailyPlugin extends Plugin {
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
+		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
@@ -132,8 +130,7 @@ class SettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
-
+		const { containerEl } = this;
 		containerEl.empty();
 
 		const nowYMD = window.moment().format('yyyy-MM-DD')
@@ -176,34 +173,6 @@ class SettingTab extends PluginSettingTab {
 	}
 }
 
-enum FileViewMode {
-	source = 'source', preview = 'preview', default = 'default'
-}
-
-enum NewTabDirection {
-	vertical = "vertical", horizontal = "horizontal"
-}
-
-async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
-	let leaf: WorkspaceLeaf;
-
-	if (optional?.openInNewTab && optional?.direction) {
-			leaf = app.workspace.splitActiveLeaf(optional.direction);
-	} else {
-			leaf = app.workspace.getUnpinnedLeaf();
-	}
-
-	await leaf.openFile(file)
-
-	if (optional?.mode || optional?.focus) {
-			await leaf.setViewState({
-					...leaf.getViewState(),
-					state: optional.mode && optional.mode !== 'default' ? {...leaf.view.getState(), mode: optional.mode} : leaf.view.getState(),
-					popstate: true,
-			} as ViewState, { focus: optional?.focus });
-	}
-	return leaf
-}
 
 class StyleManger  {
 	styleTag: HTMLStyleElement;

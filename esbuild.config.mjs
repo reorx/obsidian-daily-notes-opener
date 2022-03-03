@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
+import * as child_process from 'child_process'
+import * as fs from 'fs'
 
 const banner =
 `/*
@@ -10,6 +12,24 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === 'production');
+
+let runScriptPlugin = {
+  name: 'run-script',
+  setup(build) {
+    build.onEnd(result => {
+			const scriptName = 'sync-plugin.sh'
+			if (!fs.existsSync(scriptName)) {
+				return
+			}
+      console.log(`run ${scriptName}`);
+			child_process.exec(`bash ${scriptName}`, (err, stdout, stderr) => {
+				if (err) {
+      		console.error(`run ${scriptName} error:`, err, stdout, stderr)
+				}
+			})
+    })
+  },
+}
 
 esbuild.build({
 	banner: {
@@ -49,4 +69,5 @@ esbuild.build({
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
 	outfile: 'main.js',
+	plugins: [runScriptPlugin],
 }).catch(() => process.exit(1));
