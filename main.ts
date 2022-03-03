@@ -1,6 +1,6 @@
 import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
-	TFile, WorkspaceLeaf, normalizePath
+	TFile, WorkspaceLeaf,
 } from 'obsidian';
 import {
 	openFile, NewTabDirection, FileViewMode,
@@ -26,11 +26,14 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 		format = 'yyyy-MM-DD'
 	}
 	const splited = settings.endOfDayTime.split(':').map(Number)
+	if (splited.length !== 2) {
+		throw new Error('Invalid end of day time format')
+	}
 	const now = window.moment()
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
 	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
-	const todayPath = normalizePath(`${folder}/${shifted.format(format)}.md`);
+	const todayPath = `${folder}/${shifted.format(format)}.md`
 	return [todayPath, shifted]
 }
 
@@ -79,12 +82,12 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 }
 
 const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
+	console.debug('openOrCreateInNewTab', path, time)
 	let file = app.vault.getAbstractFileByPath(path) as TFile
 	if (!(file instanceof TFile)) {
 		console.log('create today note:', path)
 		file = await createDailyNote(time)
 	}
-	// console.log('openOrCreateInNewTab', file)
 	const leaf = await openFile(app, file, {
 		openInNewTab: true,
 		direction: NewTabDirection.vertical,
