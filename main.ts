@@ -21,8 +21,8 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => 
 	}
 	const splited = settings.endOfDayTime.split(':').map(Number)
 	const now = window.moment()
-	const shifted = now.subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
-	console.log('now', now, 'shifted', shifted)
+	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
+	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
 	const todayPath = normalizePath(`${folder}/${shifted.format(format)}.md`);
 	return todayPath
@@ -142,7 +142,7 @@ class SettingTab extends PluginSettingTab {
 			.setName('End of day time')
 			.setDesc(`Determine today\'s date, if the value is 03:00 and the current datetime is ${nowYMD} 02:59, then the date for today is ${yesterdayYMD}`)
 			.addText(text => text
-				.setPlaceholder('HH:MM')
+				.setPlaceholder('HH:mm')
 				.setValue(this.plugin.settings.endOfDayTime)
 				.onChange(async (value) => {
 					this.plugin.settings.endOfDayTime = value;
