@@ -4,8 +4,9 @@ import {
 } from 'obsidian';
 import {
 	openFile, NewTabDirection, FileViewMode,
-	getContainerElfromLeaf, getFileFromLeaf, getDailyNotesSettings,
+	getContainerElfromLeaf, getFileFromLeaf,
 } from './utils'
+import { createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings } from 'obsidian-daily-notes-interface'
 
 interface PluginSettings {
 	endOfDayTime: string;
@@ -19,7 +20,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	backgroundColor: '#fefaea',
 }
 
-const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => {
+const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
 	let { folder, format } = dailyNotesSettings
 	if (!format) {
 		format = 'yyyy-MM-DD'
@@ -30,29 +31,39 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: any) => 
 	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
 	const todayPath = normalizePath(`${folder}/${shifted.format(format)}.md`);
-	return todayPath
+	return [todayPath, shifted]
 }
+
+const TODAY_NOTE_CLASS = 'is-today-note'
 
 const addTodayNoteClass = (leaf: WorkspaceLeaf) => {
 	const el = getContainerElfromLeaf(leaf)
-	el.addClass('is-today-note')
+	el.addClass(TODAY_NOTE_CLASS)
 }
 
-const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNotesSettings: any) => {
-	const todayPath = getTodayNotePath(settings, dailyNotesSettings)
+const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
+	const el = getContainerElfromLeaf(leaf)
+	el.removeClass(TODAY_NOTE_CLASS)
+}
+
+const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings) => {
+	const [todayPath, todayTime] = getTodayNotePath(settings, dailyNotesSettings)
 
 	if (settings.alwaysOpenNewTab) {
-		await openPathInNewTab(app, todayPath)
+		await openOrCreateInNewTab(app, todayPath, todayTime)
 		return
 	}
 
-	// try to find a existing tab
+	// try to find a existing tab, if multiple tabs are open, only the last one will be used
 	var todayNoteLeaf: WorkspaceLeaf
 	app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
 		const file: TFile = getFileFromLeaf(leaf)
-		if (file && file.path === todayPath) {
-			todayNoteLeaf = leaf
-			return
+		if (file) {
+			if (file.path === todayPath) {
+				todayNoteLeaf = leaf
+			} else {
+				removeTodayNoteClass(leaf)
+			}
 		}
 	})
 
@@ -63,13 +74,17 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 			...todayNoteLeaf.getViewState(),
 		}, {focus: true})
 	} else {
-		await openPathInNewTab(app, todayPath)
+		await openOrCreateInNewTab(app, todayPath, todayTime)
 	}
 }
 
-const openPathInNewTab = async (app: App, path: string) => {
-	const file = app.vault.getAbstractFileByPath(path) as TFile
-	// console.log('openPathInNewTab', file)
+const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
+	let file = app.vault.getAbstractFileByPath(path) as TFile
+	if (!file) {
+		console.log('create today note:', path)
+		file = await createDailyNote(time)
+	}
+	// console.log('openOrCreateInNewTab', file)
 	const leaf = await openFile(app, file, {
 		openInNewTab: true,
 		direction: NewTabDirection.vertical,
@@ -85,12 +100,12 @@ export default class NewTabDailyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		const dailyNotesSettings = getDailyNotesSettings(this.app)
+		const dailyNotesSettings = getDailyNoteSettings()
 		this.styleManager = new StyleManger(this)
 		this.styleManager.setStyle()
 
 		// add sidebar button
-		const ribbonIconEl = this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
+		this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
 			await openTodayNoteInNewTab(this.app, this.settings, dailyNotesSettings);
 			new Notice("Today's daily note opened");
 		});

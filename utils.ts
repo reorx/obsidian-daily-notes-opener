@@ -54,13 +54,3 @@ export function getFileFromLeaf(leaf: WorkspaceLeaf): TFile {
   const view = leaf.view as any
   return view.file
 }
-
-export interface DailyNotesSettings {
-  folder: string;
-  format: string;
-}
-
-export function getDailyNotesSettings(app: App): DailyNotesSettings {
-  const extendedApp = app as any
-  return extendedApp.internalPlugins.getPluginById('daily-notes').instance?.options
-}
