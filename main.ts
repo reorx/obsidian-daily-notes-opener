@@ -58,7 +58,7 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 	var todayNoteLeaf: WorkspaceLeaf
 	app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
 		const file: TFile = getFileFromLeaf(leaf)
-		if (file) {
+		if (file instanceof TFile) {
 			if (file.path === todayPath) {
 				todayNoteLeaf = leaf
 			} else {
@@ -80,7 +80,7 @@ const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNo
 
 const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
 	let file = app.vault.getAbstractFileByPath(path) as TFile
-	if (!file) {
+	if (!(file instanceof TFile)) {
 		console.log('create today note:', path)
 		file = await createDailyNote(time)
 	}
