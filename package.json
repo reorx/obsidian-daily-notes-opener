@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-daily-notes-new-tab",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"description": "Obsidian plugin to add command and sidebar button to open daily notes in new tab",
 	"main": "main.js",
 	"scripts": {
