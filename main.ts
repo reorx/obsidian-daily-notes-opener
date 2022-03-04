@@ -33,7 +33,10 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
 	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
-	const todayPath = `${folder}/${shifted.format(format)}.md`
+	let todayPath = `${shifted.format(format)}.md`
+	if (folder) {
+		todayPath = `${folder}/${shifted.format(format)}.md`
+	}
 	return [todayPath, shifted]
 }
 
