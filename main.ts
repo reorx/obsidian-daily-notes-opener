@@ -105,6 +105,8 @@ export default class NewTabDailyPlugin extends Plugin {
 	styleManager: StyleManger;
 
 	async onload() {
+		const pkg = require('./package.json')
+		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings();
 		const dailyNotesSettings = getDailyNoteSettings()
 		this.styleManager = new StyleManger(this)
