@@ -53,38 +53,7 @@ const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
 	el.removeClass(TODAY_NOTE_CLASS)
 }
 
-const openTodayNoteInNewTab = async (app: App, settings: PluginSettings) => {
-	const dailyNotesSettings = await getDailyNoteSettings()
-	const [todayPath, todayTime] = getTodayNotePath(settings, dailyNotesSettings)
 
-	if (settings.alwaysOpenNewTab) {
-		await openOrCreateInNewTab(app, todayPath, todayTime)
-		return
-	}
-
-	// try to find a existing tab, if multiple tabs are open, only the last one will be used
-	var todayNoteLeaf: WorkspaceLeaf
-	app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-		const file: TFile = getFileFromLeaf(leaf)
-		if (file instanceof TFile) {
-			if (file.path === todayPath) {
-				todayNoteLeaf = leaf
-			} else {
-				removeTodayNoteClass(leaf)
-			}
-		}
-	})
-
-	if (todayNoteLeaf) {
-		addTodayNoteClass(todayNoteLeaf)
-
-		todayNoteLeaf.setViewState({
-			...todayNoteLeaf.getViewState(),
-		}, {focus: true})
-	} else {
-		await openOrCreateInNewTab(app, todayPath, todayTime)
-	}
-}
 
 const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
 	console.debug('openOrCreateInNewTab', path, time)
@@ -93,18 +62,18 @@ const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment)
 		console.log('create today note:', path)
 		file = await createDailyNote(time)
 	}
-	const leaf = await openFile(app, file, {
+	await openFile(app, file, {
 		openInNewTab: true,
 		direction: NewTabDirection.vertical,
 		focus: true,
 		mode: FileViewMode.default,
 	})
-	addTodayNoteClass(leaf)
 }
 
 export default class NewTabDailyPlugin extends Plugin {
 	settings: PluginSettings;
 	styleManager: StyleManger;
+	todayPathCached: string;
 
 	async onload() {
 		const pkg = require('./package.json')
@@ -115,7 +84,7 @@ export default class NewTabDailyPlugin extends Plugin {
 
 		// add sidebar button
 		this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
-			await openTodayNoteInNewTab(this.app, this.settings);
+			await this.openTodayNoteInNewTab();
 			new Notice("Today's daily note opened");
 		});
 
@@ -124,12 +93,66 @@ export default class NewTabDailyPlugin extends Plugin {
 			id: 'open-todays-daily-note-in-new-tab',
 			name: "Open today's daily note in new tab",
 			callback: async () => {
-				await openTodayNoteInNewTab(this.app, this.settings)
+				await this.openTodayNoteInNewTab()
 			}
 		});
 
+		// register event
+		this.registerEvent(
+			this.app.workspace.on('file-open', () => {
+				// check if active leaf is still today's note
+				const { activeLeaf } = this.app.workspace
+				if (!activeLeaf) {
+					return
+				}
+				// console.log('active leaf', activeLeaf)
+				const file: TFile = getFileFromLeaf(activeLeaf)
+				if (!(file instanceof TFile)) {
+					return
+				}
+				if (file.path === this.todayPathCached) {
+					addTodayNoteClass(activeLeaf)
+				} else {
+					removeTodayNoteClass(activeLeaf)
+				}
+			})
+		)
+
 		// add settings tab
 		this.addSettingTab(new SettingTab(this.app, this));
+	}
+
+	async openTodayNoteInNewTab() {
+		const dailyNotesSettings = getDailyNoteSettings()
+		const [todayPath, todayTime] = getTodayNotePath(this.settings, dailyNotesSettings)
+		// update todayPathCached so that event callback could use it
+		this.todayPathCached = todayPath
+
+		if (this.settings.alwaysOpenNewTab) {
+			await openOrCreateInNewTab(this.app, todayPath, todayTime)
+			return
+		}
+
+		// try to find a existing tab, if multiple tabs are open, only the last one will be used
+		var todayNoteLeaf: WorkspaceLeaf
+		this.app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
+			const file: TFile = getFileFromLeaf(leaf)
+			if (file instanceof TFile) {
+				if (file.path === todayPath) {
+					todayNoteLeaf = leaf
+				} else {
+					removeTodayNoteClass(leaf)
+				}
+			}
+		})
+
+		if (todayNoteLeaf) {
+			todayNoteLeaf.setViewState({
+				...todayNoteLeaf.getViewState(),
+			}, {focus: true})
+		} else {
+			await openOrCreateInNewTab(this.app, todayPath, todayTime)
+		}
 	}
 
 	onunload() {
