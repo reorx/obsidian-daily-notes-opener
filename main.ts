@@ -33,11 +33,11 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
 	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
-	let todayPath = `${shifted.format(format)}.md`
+	let path = `${shifted.format(format)}.md`
 	if (folder) {
-		todayPath = `${folder}/${shifted.format(format)}.md`
+		path = `${folder}/${shifted.format(format)}.md`
 	}
-	return [todayPath, shifted]
+	return [path, shifted]
 }
 
 const TODAY_NOTE_CLASS = 'is-today-note'
@@ -71,7 +71,7 @@ const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment)
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings;
 	styleManager: StyleManger;
-	todayPathCached: string;
+	todayNotePathCached: string;
 
 	async onload() {
 		const pkg = require('./package.json')
@@ -106,7 +106,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 				// add or remove today note class according to the file
 				const { file } = view
-				if (file.path === this.todayPathCached) {
+				if (file.path === this.todayNotePathCached) {
 					addTodayNoteClass(view.leaf)
 				} else {
 					removeTodayNoteClass(view.leaf)
@@ -120,12 +120,12 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 	async openTodayNoteInNewTab() {
 		const dailyNotesSettings = getDailyNoteSettings()
-		const [todayPath, todayTime] = getTodayNotePath(this.settings, dailyNotesSettings)
-		// update todayPathCached so that event callback could use it
-		this.todayPathCached = todayPath
+		const [todayNotePath, todayTime] = getTodayNotePath(this.settings, dailyNotesSettings)
+		// update todayNotePathCached so that event callback could use it
+		this.todayNotePathCached = todayNotePath
 
 		if (this.settings.alwaysOpenNewTab) {
-			await openOrCreateInNewTab(this.app, todayPath, todayTime)
+			await openOrCreateInNewTab(this.app, todayNotePath, todayTime)
 			return
 		}
 
@@ -134,7 +134,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		this.app.workspace.getLeavesOfType('markdown').forEach(leaf => {
 			// check if leaf's file is today's note
 			const { file } = leaf.view as MarkdownView
-			if (file.path === todayPath) {
+			if (file.path === todayNotePath) {
 				todayNoteLeaf = leaf
 			} else {
 				removeTodayNoteClass(leaf)
@@ -146,7 +146,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				...todayNoteLeaf.getViewState(),
 			}, {focus: true})
 		} else {
-			await openOrCreateInNewTab(this.app, todayPath, todayTime)
+			await openOrCreateInNewTab(this.app, todayNotePath, todayTime)
 		}
 	}
 
