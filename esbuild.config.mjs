@@ -17,16 +17,19 @@ let runScriptPlugin = {
   name: 'run-script',
   setup(build) {
     build.onEnd(result => {
-			const scriptName = 'sync-plugin.sh'
-			if (!fs.existsSync(scriptName)) {
-				return
+		if (result.errors.length > 0) {
+			return
+		}
+		const scriptName = 'sync-plugin.sh'
+		if (!fs.existsSync(scriptName)) {
+			return
+		}
+	console.log(`run ${scriptName}`);
+		child_process.exec(`bash ${scriptName}`, (err, stdout, stderr) => {
+			if (err) {
+		console.error(`run ${scriptName} error:`, err, stdout, stderr)
 			}
-      console.log(`run ${scriptName}`);
-			child_process.exec(`bash ${scriptName}`, (err, stdout, stderr) => {
-				if (err) {
-      		console.error(`run ${scriptName} error:`, err, stdout, stderr)
-				}
-			})
+		})
     })
   },
 }
