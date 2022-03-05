@@ -50,11 +50,6 @@ export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
   return extendedLeaf.containerEl
 }
 
-export function getFileFromLeaf(leaf: WorkspaceLeaf): TFile {
-  const view = leaf.view as any
-  return view.file
-}
-
 export interface Styles {
 	backgroundColor: string;
 }

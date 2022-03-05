@@ -1,11 +1,10 @@
 import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
-	TFile, WorkspaceLeaf,
+	TFile, WorkspaceLeaf, MarkdownView,
 } from 'obsidian';
 import {
 	openFile, NewTabDirection, FileViewMode,
-	getContainerElfromLeaf, getFileFromLeaf,
-	StyleManger,
+	getContainerElfromLeaf, StyleManger,
 } from './utils'
 import { createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings } from 'obsidian-daily-notes-interface'
 
@@ -100,19 +99,17 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on('file-open', () => {
 				// check if active leaf is still today's note
-				const { activeLeaf } = this.app.workspace
-				if (!activeLeaf) {
+				const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+				if (!view) {
 					return
 				}
-				// console.log('active leaf', activeLeaf)
-				const file: TFile = getFileFromLeaf(activeLeaf)
-				if (!(file instanceof TFile)) {
-					return
-				}
+
+				// add or remove today note class according to the file
+				const { file } = view
 				if (file.path === this.todayPathCached) {
-					addTodayNoteClass(activeLeaf)
+					addTodayNoteClass(view.leaf)
 				} else {
-					removeTodayNoteClass(activeLeaf)
+					removeTodayNoteClass(view.leaf)
 				}
 			})
 		)
@@ -134,21 +131,13 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 		// try to find a existing tab, if multiple tabs are open, only the last one will be used
 		var todayNoteLeaf: WorkspaceLeaf
-		this.app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-			// only check for leaves of which the view is markdown type,
-			// becase outline and backlink leaf also have .view.file
-			if (leaf.getViewState().type !== 'markdown') {
-				return
-			}
-
-			// check if leaf's is today's note
-			const file: TFile = getFileFromLeaf(leaf)
-			if (file instanceof TFile) {
-				if (file.path === todayPath) {
-					todayNoteLeaf = leaf
-				} else {
-					removeTodayNoteClass(leaf)
-				}
+		this.app.workspace.getLeavesOfType('markdown').forEach(leaf => {
+			// check if leaf's file is today's note
+			const { file } = leaf.view as MarkdownView
+			if (file.path === todayPath) {
+				todayNoteLeaf = leaf
+			} else {
+				removeTodayNoteClass(leaf)
 			}
 		})
 
