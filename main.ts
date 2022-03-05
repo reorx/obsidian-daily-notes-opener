@@ -109,8 +109,8 @@ export default class NewTabDailyPlugin extends Plugin {
 		const pkg = require('./package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings();
-		this.styleManager = new StyleManger(this)
-		this.styleManager.setStyle()
+		this.styleManager = new StyleManger()
+		this.setStyle()
 
 		// add sidebar button
 		this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
@@ -141,6 +141,12 @@ export default class NewTabDailyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	setStyle() {
+		this.styleManager.setStyle({
+			backgroundColor: this.settings.backgroundColor,
+		})
 	}
 }
 
@@ -190,26 +196,27 @@ class SettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.backgroundColor = value;
 					await this.plugin.saveSettings();
-					this.plugin.styleManager.setStyle();
+					this.plugin.setStyle();
 				}
 			));
 	}
 }
 
+interface Styles {
+	backgroundColor: string;
+}
 
 class StyleManger  {
 	styleTag: HTMLStyleElement;
-	plugin: NewTabDailyPlugin;
 
-	constructor(plugin: NewTabDailyPlugin) {
-		this.plugin = plugin
+	constructor() {
 		this.styleTag = document.createElement('style')
 		this.styleTag.id = 'today-note-style'
 		document.getElementsByTagName("head")[0].appendChild(this.styleTag)
 	}
 
-	setStyle() {
-		const { backgroundColor } = this.plugin.settings
+	setStyle(styles: Styles) {
+		const { backgroundColor } = styles
 		this.styleTag.innerText = `
 			.workspace-leaf.is-today-note .view-header,
 			.workspace-leaf.is-today-note .view-header > .view-actions {
