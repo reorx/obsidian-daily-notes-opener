@@ -54,3 +54,37 @@ export function getFileFromLeaf(leaf: WorkspaceLeaf): TFile {
   const view = leaf.view as any
   return view.file
 }
+
+export interface Styles {
+	backgroundColor: string;
+}
+
+export class StyleManger  {
+	styleTag: HTMLStyleElement;
+
+	constructor() {
+		this.styleTag = document.createElement('style')
+		this.styleTag.id = 'today-note-style'
+		document.getElementsByTagName("head")[0].appendChild(this.styleTag)
+	}
+
+	setStyle(styles: Styles) {
+		const { backgroundColor } = styles
+		this.styleTag.innerText = `
+			.workspace-leaf.is-today-note .view-header,
+			.workspace-leaf.is-today-note .view-header > .view-actions {
+				background-color: ${backgroundColor} !important;
+			}
+
+			.workspace-leaf.is-today-note .markdown-source-view {
+				background-color: ${backgroundColor} !important;
+			}
+		`
+			.trim()
+      .replace(/[\r\n\s]+/g, " ")
+	}
+
+	cleanup() {
+		this.styleTag.remove()
+	}
+}
