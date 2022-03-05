@@ -135,6 +135,13 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		// try to find a existing tab, if multiple tabs are open, only the last one will be used
 		var todayNoteLeaf: WorkspaceLeaf
 		this.app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
+			// only check for leaves of which the view is markdown type,
+			// becase outline and backlink leaf also have .view.file
+			if (leaf.getViewState().type !== 'markdown') {
+				return
+			}
+
+			// check if leaf's is today's note
 			const file: TFile = getFileFromLeaf(leaf)
 			if (file instanceof TFile) {
 				if (file.path === todayPath) {
