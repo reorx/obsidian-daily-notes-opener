@@ -52,7 +52,8 @@ const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
 	el.removeClass(TODAY_NOTE_CLASS)
 }
 
-const openTodayNoteInNewTab = async (app: App, settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings) => {
+const openTodayNoteInNewTab = async (app: App, settings: PluginSettings) => {
+	const dailyNotesSettings = await getDailyNoteSettings()
 	const [todayPath, todayTime] = getTodayNotePath(settings, dailyNotesSettings)
 
 	if (settings.alwaysOpenNewTab) {
@@ -108,13 +109,12 @@ export default class NewTabDailyPlugin extends Plugin {
 		const pkg = require('./package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings();
-		const dailyNotesSettings = getDailyNoteSettings()
 		this.styleManager = new StyleManger(this)
 		this.styleManager.setStyle()
 
 		// add sidebar button
 		this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
-			await openTodayNoteInNewTab(this.app, this.settings, dailyNotesSettings);
+			await openTodayNoteInNewTab(this.app, this.settings);
 			new Notice("Today's daily note opened");
 		});
 
@@ -123,7 +123,7 @@ export default class NewTabDailyPlugin extends Plugin {
 			id: 'open-todays-daily-note-in-new-tab',
 			name: "Open today's daily note in new tab",
 			callback: async () => {
-				await openTodayNoteInNewTab(this.app, this.settings, dailyNotesSettings)
+				await openTodayNoteInNewTab(this.app, this.settings)
 			}
 		});
 
