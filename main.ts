@@ -54,7 +54,6 @@ const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
 }
 
 
-
 const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
 	console.debug('openOrCreateInNewTab', path, time)
 	let file = app.vault.getAbstractFileByPath(path) as TFile
@@ -70,7 +69,7 @@ const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment)
 	})
 }
 
-export default class NewTabDailyPlugin extends Plugin {
+export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings;
 	styleManager: StyleManger;
 	todayPathCached: string;
@@ -175,9 +174,9 @@ export default class NewTabDailyPlugin extends Plugin {
 }
 
 class SettingTab extends PluginSettingTab {
-	plugin: NewTabDailyPlugin;
+	plugin: DailyNotesNewTabPlugin;
 
-	constructor(app: App, plugin: NewTabDailyPlugin) {
+	constructor(app: App, plugin: DailyNotesNewTabPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
