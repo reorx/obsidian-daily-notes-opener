@@ -1,3 +1,8 @@
+/*
+ * TODO
+ * - [ ] color for preview pane
+ */
+
 import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
 	TFile, WorkspaceLeaf, MarkdownView,
@@ -144,7 +149,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		if (todayNoteLeaf) {
 			todayNoteLeaf.setViewState({
 				...todayNoteLeaf.getViewState(),
-			}, {focus: true})
+			}, { focus: true })
 		} else {
 			await openOrCreateInNewTab(this.app, todayNotePath, todayTime)
 		}
@@ -193,7 +198,7 @@ class SettingTab extends PluginSettingTab {
 					this.plugin.settings.endOfDayTime = value;
 					await this.plugin.saveSettings();
 				}
-			));
+				));
 
 		new Setting(containerEl)
 			.setName('Always open new tab')
@@ -204,7 +209,7 @@ class SettingTab extends PluginSettingTab {
 					this.plugin.settings.alwaysOpenNewTab = value;
 					await this.plugin.saveSettings();
 				}
-			));
+				));
 
 		new Setting(containerEl)
 			.setName('Background color')
@@ -217,6 +222,6 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.plugin.setStyle();
 				}
-			));
+				));
 	}
 }
