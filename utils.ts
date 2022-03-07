@@ -71,7 +71,8 @@ export class StyleManger  {
 				background-color: ${backgroundColor} !important;
 			}
 
-			.workspace-leaf.is-today-note .markdown-source-view {
+			.workspace-leaf.is-today-note .markdown-source-view,
+			.workspace-leaf.is-today-note .markdown-reading-view {
 				background-color: ${backgroundColor} !important;
 			}
 		`

@@ -1,8 +1,3 @@
-/*
- * TODO
- * - [ ] color for preview pane
- */
-
 import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
 	TFile, WorkspaceLeaf, MarkdownView,
