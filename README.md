@@ -3,7 +3,7 @@
 This plugin adds a command for opening daily notes in a new tab (so that keyboard shortcut could be used!), and gives extra control over the behavior of daily notes.
 
 Features:
-- 🌟 Provides command and sidebar button for "Open today's daily note in new tab"
+- ⚡️ Provides command and sidebar button for "Open today's daily note in new tab"
 - 🔎 Find and focus on the already opened note to avoid redundancy
 - 🕐 Determine end of day time, let you open the right daily note in the midnight
 - 🌈 Colorize the daily note pane to make it outstanding
