@@ -52,32 +52,47 @@ export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
 
 export interface Styles {
 	backgroundColor: string;
+	backgroundColorDark: string;
 }
 
 export class StyleManger  {
 	styleTag: HTMLStyleElement;
 
 	constructor() {
-		this.styleTag = document.createElement('style')
-		this.styleTag.id = 'today-note-style'
-		document.getElementsByTagName("head")[0].appendChild(this.styleTag)
+		this.styleTag = document.head.createEl('style')
+		this.styleTag.id = 'daily-notes-new-tab-style'
 	}
 
 	setStyle(styles: Styles) {
-		const { backgroundColor } = styles
-		this.styleTag.innerText = `
-			.workspace-leaf.is-today-note .view-header,
-			.workspace-leaf.is-today-note .view-header > .view-actions {
-				background-color: ${backgroundColor} !important;
-			}
+		const { backgroundColor, backgroundColorDark } = styles
+		let text = ''
+		if (backgroundColor) {
+			text += `
+				.theme-light .workspace-leaf.is-today-note .view-header,
+				.theme-light .workspace-leaf.is-today-note .view-header > .view-actions {
+					background-color: ${backgroundColor} !important;
+				}
 
-			.workspace-leaf.is-today-note .markdown-source-view,
-			.workspace-leaf.is-today-note .markdown-reading-view {
-				background-color: ${backgroundColor} !important;
-			}
-		`
-			.trim()
-      .replace(/[\r\n\s]+/g, " ")
+				.theme-light .workspace-leaf.is-today-note .markdown-source-view,
+				.theme-light .workspace-leaf.is-today-note .markdown-reading-view {
+					background-color: ${backgroundColor} !important;
+				}
+			`
+		}
+		if (backgroundColorDark) {
+			text += `
+				.theme-dark .workspace-leaf.is-today-note .view-header,
+				.theme-dark .workspace-leaf.is-today-note .view-header > .view-actions {
+					background-color: ${backgroundColorDark} !important;
+				}
+
+				.theme-dark .workspace-leaf.is-today-note .markdown-source-view,
+				.theme-dark .workspace-leaf.is-today-note .markdown-reading-view {
+					background-color: ${backgroundColorDark} !important;
+				}
+			`
+		}
+		this.styleTag.innerText = text.trim().replace(/[\r\n\s]+/g, " ")
 	}
 
 	cleanup() {
