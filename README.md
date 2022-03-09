@@ -34,6 +34,12 @@ Installation: search for "**Daily notes new tab**" in Community plugins.
 
     Default: `#2d291f`
 
+## FAQ
+
+- Q: Does this work with [Periodic Notes](https://github.com/liamcain/obsidian-periodic-notes)?
+
+	A: Yes, if *Daily Notes* in the **Periodic Notes** plugin is enabled, it will use settings from Periodic Notes, otherwise, it will use settings from the **Daily notes core plugin**.
+
 ## Credits
 
 This project is made possible by the community surrounding it and especially the wonderful projects listed in this document.
