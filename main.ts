@@ -12,12 +12,14 @@ interface PluginSettings {
 	endOfDayTime: string;
 	alwaysOpenNewTab: boolean;
 	backgroundColor: string;
+	backgroundColorDark: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
 	alwaysOpenNewTab: false,
 	backgroundColor: '#fefaea',
+	backgroundColorDark: '#f1faea',
 }
 
 const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
@@ -165,6 +167,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	setStyle() {
 		this.styleManager.setStyle({
 			backgroundColor: this.settings.backgroundColor,
+			backgroundColorDark: this.settings.backgroundColorDark
 		})
 	}
 }
@@ -207,13 +210,26 @@ class SettingTab extends PluginSettingTab {
 				));
 
 		new Setting(containerEl)
-			.setName('Background color')
-			.setDesc(`Set background color for today's daily note`)
+			.setName('Background color (light theme)')
+			.setDesc(`Set background color for today's daily note under light theme`)
 			.addText(text => text
 				.setPlaceholder('RGB or Hex')
 				.setValue(this.plugin.settings.backgroundColor)
 				.onChange(async (value) => {
 					this.plugin.settings.backgroundColor = value;
+					await this.plugin.saveSettings();
+					this.plugin.setStyle();
+				}
+				));
+
+		new Setting(containerEl)
+			.setName('Background color (dark theme)')
+			.setDesc(`Set background color for today's daily note under dark theme`)
+			.addText(text => text
+				.setPlaceholder('RGB or Hex')
+				.setValue(this.plugin.settings.backgroundColorDark)
+				.onChange(async (value) => {
+					this.plugin.settings.backgroundColorDark = value;
 					await this.plugin.saveSettings();
 					this.plugin.setStyle();
 				}
