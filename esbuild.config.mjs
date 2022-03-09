@@ -18,7 +18,7 @@ let runScriptPlugin = {
 				return
 			}
 			console.log(`run ${scriptName}`);
-			child_process.execSync(`bash ${scriptName}`, (err, stdout, stderr) => {
+			child_process.exec(`bash ${scriptName}`, (err, stdout, stderr) => {
 				if (err) {
 					console.error(`run ${scriptName} error:`, err, stdout, stderr)
 				}
@@ -36,27 +36,6 @@ esbuild.build({
 	external: [
 		'obsidian',
 		'electron',
-		'@codemirror/autocomplete',
-		'@codemirror/closebrackets',
-		'@codemirror/collab',
-		'@codemirror/commands',
-		'@codemirror/comment',
-		'@codemirror/fold',
-		'@codemirror/gutter',
-		'@codemirror/highlight',
-		'@codemirror/history',
-		'@codemirror/language',
-		'@codemirror/lint',
-		'@codemirror/matchbrackets',
-		'@codemirror/panel',
-		'@codemirror/rangeset',
-		'@codemirror/rectangular-selection',
-		'@codemirror/search',
-		'@codemirror/state',
-		'@codemirror/stream-parser',
-		'@codemirror/text',
-		'@codemirror/tooltip',
-		'@codemirror/view',
 		...builtins],
 	format: 'cjs',
 	watch: !prod,
