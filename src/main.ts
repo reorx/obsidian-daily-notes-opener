@@ -1,3 +1,7 @@
+/* TODO
+ * - [ ] add lumberjack functionality, allow adding new lines for the daily notes https://github.com/ryanjamurphy/lumberjack-obsidian
+ * - [ ] add command to open specific files (static name files), customize icon. Then it'll be able to use Customize Sidebar plugin to add these commands to sidebar
+ */
 import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
 	TFile, WorkspaceLeaf, MarkdownView,
@@ -76,7 +80,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	todayNotePathCached: string;
 
 	async onload() {
-		const pkg = require('./package.json')
+		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings();
 		this.styleManager = new StyleManger()
