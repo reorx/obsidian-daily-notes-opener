@@ -50,3 +50,5 @@ This project is made possible by the community surrounding it and especially the
 - [QuickAdd](https://github.com/chhoumann/quickadd)
 - [Obsidian Style Settings Plugin](https://github.com/mgmeyers/obsidian-style-settings)
 - [Hot-Reload Plugin for Obsidian.md Plugins](https://github.com/pjeby/hot-reload)
+- [Customizable Sidebar Plugin](https://github.com/phibr0/obsidian-customizable-sidebar)
+- [Auto Class Plugin](https://github.com/OfficerHalf/obsidian-auto-class)

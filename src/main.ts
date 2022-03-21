@@ -6,11 +6,12 @@ import {
 	App, Notice, Plugin, PluginSettingTab, Setting,
 	TFile, WorkspaceLeaf, MarkdownView,
 } from 'obsidian';
+import { createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings } from 'obsidian-daily-notes-interface'
 import {
 	openFile, NewTabDirection, FileViewMode,
 	getContainerElfromLeaf, StyleManger,
 } from './utils'
-import { createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings } from 'obsidian-daily-notes-interface'
+
 
 interface PluginSettings {
 	endOfDayTime: string;
@@ -59,18 +60,18 @@ const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
 }
 
 
-const openOrCreateInNewTab = async (app: App, path: string, time: moment.Moment) => {
-	console.debug('openOrCreateInNewTab', path, time)
+const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () => Promise<TFile>, mode: FileViewMode) => {
+	console.debug('openOrCreateInNewTab', path)
 	let file = app.vault.getAbstractFileByPath(path) as TFile
 	if (!(file instanceof TFile)) {
 		console.log('create today note:', path)
-		file = await createDailyNote(time)
+		file = await createFileFunc()
 	}
 	await openFile(app, file, {
 		openInNewTab: true,
 		direction: NewTabDirection.vertical,
 		focus: true,
-		mode: FileViewMode.default,
+		mode,
 	})
 }
 
@@ -130,8 +131,14 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		// update todayNotePathCached so that event callback could use it
 		this.todayNotePathCached = todayNotePath
 
-		if (this.settings.alwaysOpenNewTab) {
-			await openOrCreateInNewTab(this.app, todayNotePath, todayTime)
+		return this.openInNewTab(todayNotePath, async () => {
+			return createDailyNote(todayTime)
+		}, this.settings.alwaysOpenNewTab)
+	}
+
+	async openInNewTab(filePath: string, createFileFunc: () => Promise<TFile>, forceNewTab: boolean = false, mode: FileViewMode = FileViewMode.default) {
+		if (forceNewTab) {
+			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
 			return
 		}
 
@@ -140,7 +147,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		this.app.workspace.getLeavesOfType('markdown').forEach(leaf => {
 			// check if leaf's file is today's note
 			const { file } = leaf.view as MarkdownView
-			if (file.path === todayNotePath) {
+			if (file.path === filePath) {
 				todayNoteLeaf = leaf
 			} else {
 				removeTodayNoteClass(leaf)
@@ -152,7 +159,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				...todayNoteLeaf.getViewState(),
 			}, { focus: true })
 		} else {
-			await openOrCreateInNewTab(this.app, todayNotePath, todayTime)
+			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
 		}
 	}
 
