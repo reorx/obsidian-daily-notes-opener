@@ -14,6 +14,14 @@ import {
 import { getNotePath } from './vault';
 
 
+const DEBUG: boolean = !(process.env.BUILD_ENV === 'production')
+
+function debugLog(...args: any[]) {
+	if (DEBUG) {
+		console.log(...args)
+	}
+}
+
 interface PluginSettings {
 	endOfDayTime: string;
 	alwaysOpenNewTab: boolean;
@@ -39,7 +47,7 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 	}
 	const now = window.moment()
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
-	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
+	debugLog('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
 	return [getNotePath(folder, shifted.format(format)), shifted]
 }
@@ -61,7 +69,7 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 	console.debug('openOrCreateInNewTab', path)
 	let file = app.vault.getAbstractFileByPath(path) as TFile
 	if (!(file instanceof TFile)) {
-		console.log('create today note:', path)
+		debugLog('create today note:', path)
 		file = await createFileFunc()
 	}
 	await openFile(app, file, {
