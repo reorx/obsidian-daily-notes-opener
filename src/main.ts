@@ -11,6 +11,7 @@ import {
 	openFile, NewTabDirection, FileViewMode,
 	getContainerElfromLeaf, StyleManger,
 } from './utils'
+import { getNotePath } from './vault';
 
 
 interface PluginSettings {
@@ -40,11 +41,7 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
 	// console.log('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
 
-	let path = `${shifted.format(format)}.md`
-	if (folder) {
-		path = `${folder}/${shifted.format(format)}.md`
-	}
-	return [path, shifted]
+	return [getNotePath(folder, shifted.format(format)), shifted]
 }
 
 const TODAY_NOTE_CLASS = 'is-today-note'
