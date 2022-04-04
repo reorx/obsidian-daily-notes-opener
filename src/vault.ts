@@ -15,37 +15,37 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
 
-import { normalizePath } from "obsidian";
+import { normalizePath } from 'obsidian'
 
 // Credit: @creationix/path.js
 export function join(...partSegments: string[]): string {
-  // Split the inputs into a list of path commands.
-  let parts: string[] = [];
-  for (let i = 0, l = partSegments.length; i < l; i++) {
-    parts = parts.concat(partSegments[i].split("/"));
-  }
-  // Interpret the path commands to get the new resolved path.
-  const newParts = [];
-  for (let i = 0, l = parts.length; i < l; i++) {
-    const part = parts[i];
-    // Remove leading and trailing slashes
-    // Also remove "." segments
-    if (!part || part === ".") continue;
-    // Push new path segments.
-    else newParts.push(part);
-  }
-  // Preserve the initial slash if there was one.
-  if (parts[0] === "") newParts.unshift("");
-  // Turn back into a single string path.
-  return newParts.join("/");
+	// Split the inputs into a list of path commands.
+	let parts: string[] = []
+	for (let i = 0, l = partSegments.length; i < l; i++) {
+		parts = parts.concat(partSegments[i].split('/'))
+	}
+	// Interpret the path commands to get the new resolved path.
+	const newParts = []
+	for (let i = 0, l = parts.length; i < l; i++) {
+		const part = parts[i]
+		// Remove leading and trailing slashes
+		// Also remove "." segments
+		if (!part || part === '.') continue
+		// Push new path segments.
+		else newParts.push(part)
+	}
+	// Preserve the initial slash if there was one.
+	if (parts[0] === '') newParts.unshift('')
+	// Turn back into a single string path.
+	return newParts.join('/')
 }
 
 export function getNotePath(
-  directory: string,
-  filename: string
+	directory: string,
+	filename: string
 ):string {
-  if (!filename.endsWith(".md")) {
-    filename += ".md";
-  }
-  return normalizePath(join(directory, filename));
+	if (!filename.endsWith('.md')) {
+		filename += '.md'
+	}
+	return normalizePath(join(directory, filename))
 }

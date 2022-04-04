@@ -1,11 +1,11 @@
-import { App, TFile, WorkspaceLeaf, ViewState } from "obsidian";
+import { App, TFile, WorkspaceLeaf, ViewState } from 'obsidian'
 
 export enum FileViewMode {
 	source = 'source', preview = 'preview', default = 'default'
 }
 
 export enum NewTabDirection {
-	vertical = "vertical", horizontal = "horizontal"
+	vertical = 'vertical', horizontal = 'horizontal'
 }
 
 // Copy from https://github.com/chhoumann/quickadd src/utility.ts
@@ -25,29 +25,29 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
 export async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
-	let leaf: WorkspaceLeaf;
+	let leaf: WorkspaceLeaf
 
 	if (optional?.openInNewTab && optional?.direction) {
-			leaf = app.workspace.splitActiveLeaf(optional.direction);
+		leaf = app.workspace.splitActiveLeaf(optional.direction)
 	} else {
-			leaf = app.workspace.getUnpinnedLeaf();
+		leaf = app.workspace.getUnpinnedLeaf()
 	}
 
 	await leaf.openFile(file)
 
 	if (optional?.mode || optional?.focus) {
-			await leaf.setViewState({
-					...leaf.getViewState(),
-					state: optional.mode && optional.mode !== 'default' ? {...leaf.view.getState(), mode: optional.mode} : leaf.view.getState(),
-					popstate: true,
-			} as ViewState, { focus: optional?.focus });
+		await leaf.setViewState({
+			...leaf.getViewState(),
+			state: optional.mode && optional.mode !== 'default' ? {...leaf.view.getState(), mode: optional.mode} : leaf.view.getState(),
+			popstate: true,
+		} as ViewState, { focus: optional?.focus })
 	}
 	return leaf
 }
 
 export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
-  const extendedLeaf = leaf as any
-  return extendedLeaf.containerEl
+	const extendedLeaf = leaf as any
+	return extendedLeaf.containerEl
 }
 
 export interface Styles {
@@ -56,7 +56,7 @@ export interface Styles {
 }
 
 export class StyleManger  {
-	styleTag: HTMLStyleElement;
+	styleTag: HTMLStyleElement
 
 	constructor() {
 		this.styleTag = document.head.createEl('style')
@@ -92,7 +92,7 @@ export class StyleManger  {
 				}
 			`
 		}
-		this.styleTag.innerText = text.trim().replace(/[\r\n\s]+/g, " ")
+		this.styleTag.innerText = text.trim().replace(/[\r\n\s]+/g, ' ')
 	}
 
 	cleanup() {

@@ -3,18 +3,19 @@
  * - [ ] add command to open specific files (static name files), customize icon. Then it'll be able to use Customize Sidebar plugin to add these commands to sidebar
  */
 import {
-	App, Notice, Plugin, PluginSettingTab, Setting,
-	TFile, WorkspaceLeaf, MarkdownView,
-} from 'obsidian';
-import { createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings } from 'obsidian-daily-notes-interface'
+	App, MarkdownView, Notice, Plugin, PluginSettingTab, Setting,
+	TFile, WorkspaceLeaf,
+} from 'obsidian'
 import {
-	openFile, NewTabDirection, FileViewMode,
-	getContainerElfromLeaf, StyleManger,
+	createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings,
+} from 'obsidian-daily-notes-interface'
+
+import {
+	FileViewMode, getContainerElfromLeaf, NewTabDirection, openFile, StyleManger,
 } from './utils'
-import { getNotePath } from './vault';
+import { getNotePath } from './vault'
 
-
-const DEBUG: boolean = !(process.env.BUILD_ENV === 'production')
+const DEBUG = !(process.env.BUILD_ENV === 'production')
 
 function debugLog(...args: any[]) {
 	if (DEBUG) {
@@ -37,7 +38,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 }
 
 const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
-	let { folder, format } = dailyNotesSettings
+	const { folder } = dailyNotesSettings
+	let { format } = dailyNotesSettings
 	if (!format) {
 		format = 'yyyy-MM-DD'
 	}
@@ -81,31 +83,31 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 }
 
 export default class DailyNotesNewTabPlugin extends Plugin {
-	settings: PluginSettings;
-	styleManager: StyleManger;
-	todayNotePathCached: string;
+	settings: PluginSettings
+	styleManager: StyleManger
+	todayNotePathCached: string
 
 	async onload() {
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
-		await this.loadSettings();
+		await this.loadSettings()
 		this.styleManager = new StyleManger()
 		this.setStyle()
 
 		// add sidebar button
-		this.addRibbonIcon('calendar-with-checkmark', "Open today's daily note in new tab", async (evt: MouseEvent) => {
-			await this.openTodayNoteInNewTab();
-			new Notice("Today's daily note opened");
-		});
+		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
+			await this.openTodayNoteInNewTab()
+			new Notice('Today\'s daily note opened')
+		})
 
 		// add command
 		this.addCommand({
 			id: 'open-todays-daily-note-in-new-tab',
-			name: "Open today's daily note in new tab",
+			name: 'Open today\'s daily note in new tab',
 			callback: async () => {
 				await this.openTodayNoteInNewTab()
 			}
-		});
+		})
 
 		// register event
 		this.registerEvent(
@@ -127,7 +129,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		)
 
 		// add settings tab
-		this.addSettingTab(new SettingTab(this.app, this));
+		this.addSettingTab(new SettingTab(this.app, this))
 	}
 
 	async openTodayNoteInNewTab() {
@@ -141,14 +143,14 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		}, this.settings.alwaysOpenNewTab)
 	}
 
-	async openInNewTab(filePath: string, createFileFunc: () => Promise<TFile>, forceNewTab: boolean = false, mode: FileViewMode = FileViewMode.default) {
+	async openInNewTab(filePath: string, createFileFunc: () => Promise<TFile>, forceNewTab = false, mode: FileViewMode = FileViewMode.default) {
 		if (forceNewTab) {
 			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
 			return
 		}
 
 		// try to find a existing tab, if multiple tabs are open, only the last one will be used
-		var todayNoteLeaf: WorkspaceLeaf
+		let todayNoteLeaf: WorkspaceLeaf
 		this.app.workspace.getLeavesOfType('markdown').forEach(leaf => {
 			// check if leaf's file is today's note
 			const { file } = leaf.view as MarkdownView
@@ -173,11 +175,11 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(this.settings)
 	}
 
 	setStyle() {
@@ -189,66 +191,66 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 }
 
 class SettingTab extends PluginSettingTab {
-	plugin: DailyNotesNewTabPlugin;
+	plugin: DailyNotesNewTabPlugin
 
 	constructor(app: App, plugin: DailyNotesNewTabPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
+		super(app, plugin)
+		this.plugin = plugin
 	}
 
 	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
+		const { containerEl } = this
+		containerEl.empty()
 
 		const nowYMD = window.moment().format('yyyy-MM-DD')
 		const yesterdayYMD = window.moment().subtract(1, 'day').format('yyyy-MM-DD')
 		new Setting(containerEl)
 			.setName('End of day time')
-			.setDesc(`Determine today\'s date, if the value is 03:00 and the current datetime is ${nowYMD} 02:59, then the date for today is ${yesterdayYMD}`)
+			.setDesc(`Determine today's date, if the value is 03:00 and the current datetime is ${nowYMD} 02:59, then the date for today is ${yesterdayYMD}`)
 			.addText(text => text
 				.setPlaceholder('HH:mm')
 				.setValue(this.plugin.settings.endOfDayTime)
 				.onChange(async (value) => {
-					this.plugin.settings.endOfDayTime = value;
-					await this.plugin.saveSettings();
+					this.plugin.settings.endOfDayTime = value
+					await this.plugin.saveSettings()
 				}
-				));
+				))
 
 		new Setting(containerEl)
 			.setName('Always open new tab')
-			.setDesc(`Set true to always open new tab even if the daily note is already opened, otherwise the plugin will try to find the existing daily note and focus on it`)
+			.setDesc('Set true to always open new tab even if the daily note is already opened, otherwise the plugin will try to find the existing daily note and focus on it')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.alwaysOpenNewTab)
 				.onChange(async (value) => {
-					this.plugin.settings.alwaysOpenNewTab = value;
-					await this.plugin.saveSettings();
+					this.plugin.settings.alwaysOpenNewTab = value
+					await this.plugin.saveSettings()
 				}
-				));
+				))
 
 		new Setting(containerEl)
 			.setName('Background color (light theme)')
-			.setDesc(`Set background color for today's daily note under light theme`)
+			.setDesc('Set background color for today\'s daily note under light theme')
 			.addText(text => text
 				.setPlaceholder('RGB or Hex')
 				.setValue(this.plugin.settings.backgroundColor)
 				.onChange(async (value) => {
-					this.plugin.settings.backgroundColor = value;
-					await this.plugin.saveSettings();
-					this.plugin.setStyle();
+					this.plugin.settings.backgroundColor = value
+					await this.plugin.saveSettings()
+					this.plugin.setStyle()
 				}
-				));
+				))
 
 		new Setting(containerEl)
 			.setName('Background color (dark theme)')
-			.setDesc(`Set background color for today's daily note under dark theme`)
+			.setDesc('Set background color for today\'s daily note under dark theme')
 			.addText(text => text
 				.setPlaceholder('RGB or Hex')
 				.setValue(this.plugin.settings.backgroundColorDark)
 				.onChange(async (value) => {
-					this.plugin.settings.backgroundColorDark = value;
-					await this.plugin.saveSettings();
-					this.plugin.setStyle();
+					this.plugin.settings.backgroundColorDark = value
+					await this.plugin.saveSettings()
+					this.plugin.setStyle()
 				}
-				));
+				))
 	}
 }
