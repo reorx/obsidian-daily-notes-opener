@@ -76,29 +76,41 @@ export class StyleManger  {
 	setStyle(styles: Styles) {
 		const { backgroundColor, backgroundColorDark } = styles
 		let text = ''
+		const lightPrefix = '.theme-light .workspace-leaf.is-today-note',
+			darkPrefix = '.theme-dark .workspace-leaf.is-today-note'
 		if (backgroundColor) {
 			text += `
-				.theme-light .workspace-leaf.is-today-note .view-header,
-				.theme-light .workspace-leaf.is-today-note .view-header > .view-actions {
+				${lightPrefix} .view-header,
+				${lightPrefix} .view-header > .view-actions {
 					background-color: ${backgroundColor} !important;
 				}
 
-				.theme-light .workspace-leaf.is-today-note .markdown-source-view,
-				.theme-light .workspace-leaf.is-today-note .markdown-reading-view {
+				${lightPrefix} .markdown-source-view,
+				${lightPrefix} .markdown-reading-view {
+					background-color: ${backgroundColor} !important;
+				}
+
+				${lightPrefix} .CodeMirror-gutter.CodeMirror-linenumbers,
+				${lightPrefix} .CodeMirror-gutter.CodeMirror-foldgutter {
 					background-color: ${backgroundColor} !important;
 				}
 			`
 		}
 		if (backgroundColorDark) {
 			text += `
-				.theme-dark .workspace-leaf.is-today-note .view-header,
-				.theme-dark .workspace-leaf.is-today-note .view-header > .view-actions {
-					background-color: ${backgroundColorDark} !important;
+				${darkPrefix} .view-header,
+				${darkPrefix} .view-header > .view-actions {
+					background-color: ${backgroundColor} !important;
 				}
 
-				.theme-dark .workspace-leaf.is-today-note .markdown-source-view,
-				.theme-dark .workspace-leaf.is-today-note .markdown-reading-view {
-					background-color: ${backgroundColorDark} !important;
+				${darkPrefix} .markdown-source-view,
+				${darkPrefix} .markdown-reading-view {
+					background-color: ${backgroundColor} !important;
+				}
+
+				${darkPrefix} .CodeMirror-gutter.CodeMirror-linenumbers,
+				${darkPrefix} .CodeMirror-gutter.CodeMirror-foldgutter {
+					background-color: ${backgroundColor} !important;
 				}
 			`
 		}
