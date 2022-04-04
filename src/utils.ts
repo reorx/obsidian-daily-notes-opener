@@ -1,4 +1,4 @@
-import { App, TFile, WorkspaceLeaf, ViewState } from 'obsidian'
+import { App, TFile, ViewState, WorkspaceLeaf } from 'obsidian'
 
 export enum FileViewMode {
 	source = 'source', preview = 'preview', default = 'default'
@@ -36,17 +36,27 @@ export async function openFile(app: App, file: TFile, optional?: {openInNewTab?:
 	await leaf.openFile(file)
 
 	if (optional?.mode || optional?.focus) {
+		const viewState = leaf.getViewState()
 		await leaf.setViewState({
-			...leaf.getViewState(),
-			state: optional.mode && optional.mode !== 'default' ? {...leaf.view.getState(), mode: optional.mode} : leaf.view.getState(),
+			...viewState,
+			state: optional.mode && optional.mode !== 'default'
+				? {
+					...viewState.state,
+					mode: optional.mode,
+				}
+				: viewState.state,
 			popstate: true,
 		} as ViewState, { focus: optional?.focus })
 	}
 	return leaf
 }
 
+class ExtendedLeaf extends WorkspaceLeaf {
+	containerEl: HTMLElement
+}
+
 export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
-	const extendedLeaf = leaf as any
+	const extendedLeaf = leaf as ExtendedLeaf
 	return extendedLeaf.containerEl
 }
 
