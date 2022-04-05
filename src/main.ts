@@ -11,7 +11,7 @@ import {
 	getPeriodicNoteSettings, createPeriodicNote,
 } from 'obsidian-daily-notes-interface'
 
-import { addTodayNoteClass, removeTodayNoteClass, StyleManger } from './styles'
+import { addTodayNoteClass, removeTodayNoteClass } from './styles'
 import { FileViewMode, NewTabDirection, openFile } from './utils'
 import { getNotePath } from './vault'
 
@@ -86,11 +86,7 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings
-	styleManager: StyleManger
-	cachedPeriodicNotes: { [key: string]: string} = {
-		day: '',
-		week: '',
-	}
+	cachedPeriodicNotes: { [key: string]: string} = {}
 
 	getPeriodicType(path: string): IGranularity {
 		for (const key in this.cachedPeriodicNotes) {
@@ -104,8 +100,6 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings()
-		this.styleManager = new StyleManger()
-		// this.setStyle()
 
 		// add sidebar button
 		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
@@ -210,7 +204,6 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.styleManager.cleanup()
 	}
 
 	async loadSettings() {
@@ -219,16 +212,6 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings)
-	}
-
-	setStyle() {
-		this.styleManager.setStyle({
-			// compatibility
-			day: {
-				backgroundColor: this.settings.backgroundColor,
-				backgroundColorDark: this.settings.backgroundColorDark
-			}
-		})
 	}
 }
 
@@ -269,34 +252,5 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings()
 				}
 				))
-
-		new Setting(containerEl)
-			.setName('Background color (light theme)')
-			.setDesc('Set background color for today\'s daily note under light theme')
-			.addText(text => text
-				.setPlaceholder('RGB or Hex')
-				.setValue(this.plugin.settings.backgroundColor)
-				.onChange(async (value) => {
-					this.plugin.settings.backgroundColor = value
-					await this.plugin.saveSettings()
-					this.plugin.setStyle()
-				}
-				))
-
-		new Setting(containerEl)
-			.setName('Background color (dark theme)')
-			.setDesc('Set background color for today\'s daily note under dark theme')
-			.addText(text => text
-				.setPlaceholder('RGB or Hex')
-				.setValue(this.plugin.settings.backgroundColorDark)
-				.onChange(async (value) => {
-					this.plugin.settings.backgroundColorDark = value
-					await this.plugin.saveSettings()
-					this.plugin.setStyle()
-				}
-				))
-
-		containerEl.createEl('h2', {text: 'Periodic Notes'})
-		containerEl.createEl('h3', {text: 'Weekly'})
 	}
 }
