@@ -1,0 +1,57 @@
+/* @settings
+
+_: '@preserve'
+name: Daily notes new tab
+id: daily-notes-new-tab
+settings:
+    -
+        id: dnnt-day-background
+        title: Daily notes background
+        type: variable-themed-color
+        opacity: false
+        format: hex
+        default-light: '#fefaea'
+        default-dark: '#2d291f'
+    -
+        id: dnnt-week-background
+        title: Weekly notes background
+        type: variable-themed-color
+        opacity: false
+        format: hex
+        default-light: '#fefaea'
+        default-dark: '#2d291f'
+*/
+:root {
+  --dnnt-day-background: #fefaea;
+  --dnnt-week-background: #fefaea;
+}
+
+.periodic-note-day .view-header,
+.periodic-note-day .view-header > .view-actions {
+	background-color: var(--dnnt-day-background) !important;
+}
+
+.periodic-note-day .markdown-source-view,
+.periodic-note-day .markdown-reading-view {
+	background-color: var(--dnnt-day-background) !important;
+}
+
+.periodic-note-day .CodeMirror-gutter.CodeMirror-linenumbers,
+.periodic-note-day .CodeMirror-gutter.CodeMirror-foldgutter {
+	background-color: var(--dnnt-day-background) !important;
+}
+
+.periodic-note-week .view-header,
+.periodic-note-week .view-header > .view-actions {
+	background-color: var(--dnnt-week-background) !important;
+}
+
+.periodic-note-week .markdown-source-view,
+.periodic-note-week .markdown-reading-view {
+	background-color: var(--dnnt-week-background) !important;
+}
+
+.periodic-note-week .CodeMirror-gutter.CodeMirror-linenumbers,
+.periodic-note-week .CodeMirror-gutter.CodeMirror-foldgutter {
+	background-color: var(--dnnt-week-background) !important;
+}

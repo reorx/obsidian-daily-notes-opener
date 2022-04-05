@@ -87,9 +87,17 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings
 	styleManager: StyleManger
-	noteCached: {
-		path: string,
-		type: IGranularity,
+	cachedPeriodicNotes: { [key: string]: string} = {
+		day: '',
+		week: '',
+	}
+
+	getPeriodicType(path: string): IGranularity {
+		for (const key in this.cachedPeriodicNotes) {
+			if (this.cachedPeriodicNotes[key] === path) {
+				return key as IGranularity
+			}
+		}
 	}
 
 	async onload() {
@@ -97,7 +105,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings()
 		this.styleManager = new StyleManger()
-		this.setStyle()
+		// this.setStyle()
 
 		// add sidebar button
 		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
@@ -138,8 +146,9 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 				// add or remove today note class according to the file
 				const { file } = view
-				if (file.path === this.noteCached.path) {
-					addTodayNoteClass(view.leaf, this.noteCached.type)
+				const type = this.getPeriodicType(file.path)
+				if (type) {
+					addTodayNoteClass(view.leaf, type)
 				} else {
 					removeTodayNoteClass(view.leaf)
 				}
@@ -153,11 +162,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	async openTodayNoteInNewTab() {
 		const periodicSettings = getDailyNoteSettings()
 		const [todayNotePath, todayTime] = getTodayNotePath(this.settings, periodicSettings)
-		// update noteCached so that event callback could use it
-		this.noteCached = {
-			path: todayNotePath,
-			type: 'day',
-		}
+		// update cachedPeriodicNotes so that event callback could use it
+		this.cachedPeriodicNotes['day'] = todayNotePath
 
 		return this.openInNewTab(todayNotePath, async () => {
 			return createDailyNote(todayTime)
@@ -167,11 +173,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	async openTodayPeriodicNoteInNewTab(type: IGranularity) {
 		const periodicSettings = getPeriodicNoteSettings(type)
 		const [todayNotePath, todayTime] = getTodayPeriodicNotePath(this.settings, periodicSettings)
-		// update noteCached so that event callback could use it
-		this.noteCached = {
-			path: todayNotePath,
-			type,
-		}
+		// update cachedPeriodicNotes so that event callback could use it
+		this.cachedPeriodicNotes[type] = todayNotePath
 
 		return this.openInNewTab(todayNotePath, async () => {
 			return createPeriodicNote(type, todayTime)
@@ -192,7 +195,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			if (file.path === filePath) {
 				todayNoteLeaf = leaf
 			} else {
-				removeTodayNoteClass(leaf)
+				if (!this.getPeriodicType(file.path))
+					removeTodayNoteClass(leaf)
 			}
 		})
 
@@ -240,6 +244,7 @@ class SettingTab extends PluginSettingTab {
 		const { containerEl } = this
 		containerEl.empty()
 
+		containerEl.createEl('h2', {text: 'General'})
 		const nowYMD = window.moment().format('yyyy-MM-DD')
 		const yesterdayYMD = window.moment().subtract(1, 'day').format('yyyy-MM-DD')
 		new Setting(containerEl)
@@ -290,5 +295,8 @@ class SettingTab extends PluginSettingTab {
 					this.plugin.setStyle()
 				}
 				))
+
+		containerEl.createEl('h2', {text: 'Periodic Notes'})
+		containerEl.createEl('h3', {text: 'Weekly'})
 	}
 }
