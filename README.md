@@ -10,6 +10,18 @@ Features:
 
 Installation: search for "**Daily notes new tab**" in Community plugins.
 
+## Usage
+
+### 1. Open today's periodic notes in new tab, in an idempotent way
+![dnnt-demo-1](https://user-images.githubusercontent.com/405972/161797452-aae4a358-e0d8-4a50-84f6-47547d0c05a1.gif)
+
+### 2. Change background color for today's perodic notes, using Style Settings
+
+![dnnt-demo-2](https://user-images.githubusercontent.com/405972/161797369-b842d6ab-91b0-486a-82a6-6ec00bcdfd9e.gif)
+
+### 3. Append line for today's periodic notes in new tab
+![dnnt-demo-3](https://user-images.githubusercontent.com/405972/161797474-ef56562d-a71e-4559-a209-bea376043bb9.gif)
+
 ## Settings
 
 - End of day time
@@ -22,17 +34,11 @@ Installation: search for "**Daily notes new tab**" in Community plugins.
     Set true to always open a new tab even if the daily note is already opened, otherwise, the plugin will try to find the existing daily note and focus on it
 
     Default: `false`
-- Background color (light theme)
+- Background color
 
-    Set the background color of the daily note under light theme
+    Daily notes new tab plugin adds support for colorizing today's periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes
+    <img width="773" alt="image" src="https://user-images.githubusercontent.com/405972/161797925-0074ec9d-e696-4014-8745-35823525ac70.png">
 
-    Default: `#fefaea`
-
-- Background color (dark theme)
-
-    Set the background color of the daily note under dark theme
-
-    Default: `#2d291f`
 
 ## FAQ
 
