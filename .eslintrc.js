@@ -36,7 +36,7 @@ module.exports = {
 		'no-unused-vars': 'off',
 		'no-prototype-builtins': 'off',
 		'@typescript-eslint/no-var-requires': 'off',
-		'@typescript-eslint/no-unused-vars': ['error', { 'args': 'none' }],
+		'@typescript-eslint/no-unused-vars': ['warn', { 'args': 'none' }],
 		'@typescript-eslint/ban-ts-comment': 'off',
 		'@typescript-eslint/no-empty-function': 'off',
 		'@typescript-eslint/no-explicit-any': ['warn', { 'ignoreRestArgs': true }]

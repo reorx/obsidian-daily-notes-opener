@@ -330,6 +330,11 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
+dot@^2.0.0-beta.1:
+  version "2.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/dot/-/dot-2.0.0-beta.1.tgz#12bcb18f39f590f9426910e1d19188dad225af25"
+  integrity sha512-kxM7fSnNQTXOmaeGuBSXM8O3fEsBb7XSDBllkGbRwa0lJSJTxxDE/4eSNGLKZUmlFw0f1vJ5qSV2BljrgQtgIA==
+
 esbuild-android-arm64@0.13.12:
   version "0.13.12"
   resolved "https://registry.yarnpkg.com/esbuild-android-arm64/-/esbuild-android-arm64-0.13.12.tgz#e1f199dc05405cdc6670c00fb6c793822bf8ae4c"

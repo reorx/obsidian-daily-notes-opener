@@ -7,12 +7,12 @@ import {
 	TFile, WorkspaceLeaf,
 } from 'obsidian'
 import {
-	createDailyNote, getDailyNoteSettings, IPeriodicNoteSettings,
+	IPeriodicNoteSettings, IGranularity, getDailyNoteSettings, createDailyNote,
+	getPeriodicNoteSettings, createPeriodicNote,
 } from 'obsidian-daily-notes-interface'
 
-import {
-	FileViewMode, getContainerElfromLeaf, NewTabDirection, openFile, StyleManger,
-} from './utils'
+import { addTodayNoteClass, removeTodayNoteClass, StyleManger } from './styles'
+import { FileViewMode, NewTabDirection, openFile } from './utils'
 import { getNotePath } from './vault'
 
 const DEBUG = !(process.env.BUILD_ENV === 'production')
@@ -37,12 +37,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	backgroundColorDark: '#2d291f',
 }
 
-const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
-	const { folder } = dailyNotesSettings
-	let { format } = dailyNotesSettings
-	if (!format) {
-		format = 'yyyy-MM-DD'
-	}
+const getNowShifted = (settings: PluginSettings): moment.Moment => {
 	const splited = settings.endOfDayTime.split(':').map(Number)
 	if (splited.length !== 2) {
 		throw new Error('Invalid end of day time format')
@@ -50,22 +45,29 @@ const getTodayNotePath = (settings: PluginSettings, dailyNotesSettings: IPeriodi
 	const now = window.moment()
 	const shifted = now.clone().subtract(splited[0], 'hours').subtract(splited[1], 'minutes')
 	debugLog('now', now.format('HH:mm'), 'shifted', shifted.format('HH:mm'))
-
-	return [getNotePath(folder, shifted.format(format)), shifted]
+	return shifted
 }
 
-const TODAY_NOTE_CLASS = 'is-today-note'
+const getTodayNotePath = (settings: PluginSettings, periodicSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
+	const { folder } = periodicSettings
+	let { format } = periodicSettings
+	if (!format) {
+		format = 'yyyy-MM-DD'
+	}
+	const nowShifted = getNowShifted(settings)
 
-const addTodayNoteClass = (leaf: WorkspaceLeaf) => {
-	const el = getContainerElfromLeaf(leaf)
-	el.addClass(TODAY_NOTE_CLASS)
+	return [getNotePath(folder, nowShifted.format(format)), nowShifted]
 }
 
-const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
-	const el = getContainerElfromLeaf(leaf)
-	el.removeClass(TODAY_NOTE_CLASS)
-}
+const getTodayPeriodicNotePath = (settings: PluginSettings, periodicSettings: IPeriodicNoteSettings): [string, moment.Moment] => {
+	const { folder, format } = periodicSettings
+	if (!format) {
+		throw new Error('Periodic note format is not defined')
+	}
+	const nowShifted = getNowShifted(settings)
 
+	return [getNotePath(folder, nowShifted.format(format)), nowShifted]
+}
 
 const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () => Promise<TFile>, mode: FileViewMode) => {
 	console.debug('openOrCreateInNewTab', path)
@@ -85,7 +87,10 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings
 	styleManager: StyleManger
-	todayNotePathCached: string
+	noteCached: {
+		path: string,
+		type: IGranularity,
+	}
 
 	async onload() {
 		const pkg = require('../package.json')
@@ -99,6 +104,12 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			await this.openTodayNoteInNewTab()
 			new Notice('Today\'s daily note opened')
 		})
+		if (DEBUG) {
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async (evt: MouseEvent) => {
+				await this.openTodayPeriodicNoteInNewTab('week')
+				new Notice('Today\'s weekly note opened')
+			})
+		}
 
 		// add command
 		this.addCommand({
@@ -106,6 +117,13 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			name: 'Open today\'s daily note in new tab',
 			callback: async () => {
 				await this.openTodayNoteInNewTab()
+			}
+		})
+		this.addCommand({
+			id: 'open-todays-weekly-note-in-new-tab',
+			name: 'Open today\'s weekly note in new tab',
+			callback: () => {
+				this.openTodayPeriodicNoteInNewTab('week')
 			}
 		})
 
@@ -120,8 +138,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 				// add or remove today note class according to the file
 				const { file } = view
-				if (file.path === this.todayNotePathCached) {
-					addTodayNoteClass(view.leaf)
+				if (file.path === this.noteCached.path) {
+					addTodayNoteClass(view.leaf, this.noteCached.type)
 				} else {
 					removeTodayNoteClass(view.leaf)
 				}
@@ -133,13 +151,30 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 
 	async openTodayNoteInNewTab() {
-		const dailyNotesSettings = getDailyNoteSettings()
-		const [todayNotePath, todayTime] = getTodayNotePath(this.settings, dailyNotesSettings)
-		// update todayNotePathCached so that event callback could use it
-		this.todayNotePathCached = todayNotePath
+		const periodicSettings = getDailyNoteSettings()
+		const [todayNotePath, todayTime] = getTodayNotePath(this.settings, periodicSettings)
+		// update noteCached so that event callback could use it
+		this.noteCached = {
+			path: todayNotePath,
+			type: 'day',
+		}
 
 		return this.openInNewTab(todayNotePath, async () => {
 			return createDailyNote(todayTime)
+		}, this.settings.alwaysOpenNewTab)
+	}
+
+	async openTodayPeriodicNoteInNewTab(type: IGranularity) {
+		const periodicSettings = getPeriodicNoteSettings(type)
+		const [todayNotePath, todayTime] = getTodayPeriodicNotePath(this.settings, periodicSettings)
+		// update noteCached so that event callback could use it
+		this.noteCached = {
+			path: todayNotePath,
+			type,
+		}
+
+		return this.openInNewTab(todayNotePath, async () => {
+			return createPeriodicNote(type, todayTime)
 		}, this.settings.alwaysOpenNewTab)
 	}
 
@@ -184,8 +219,11 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 	setStyle() {
 		this.styleManager.setStyle({
-			backgroundColor: this.settings.backgroundColor,
-			backgroundColorDark: this.settings.backgroundColorDark
+			// compatibility
+			day: {
+				backgroundColor: this.settings.backgroundColor,
+				backgroundColorDark: this.settings.backgroundColorDark
+			}
 		})
 	}
 }
