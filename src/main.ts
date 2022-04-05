@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
 	alwaysOpenNewTab: false,
 	appendLineTargetHeader: 'Journal',
-	appendLinePrefix: '- HH:mm ',
+	appendLinePrefix: '- {{DATE:HH:mm}} ',
 }
 
 const getNowShifted = (settings: PluginSettings): moment.Moment => {
@@ -307,7 +307,7 @@ class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Append line prefix')
-			.setDesc('Set the prefix for lines added via "Append Line" command, Moment.js syntax is supported.')
+			.setDesc('Set the prefix for lines added via "Append Line" command, only one template syntax is supported, which is "{{DATE:$FORMAT}}", the "$FORMAT" must be a Moment.js format, e.g. HH:mm')
 			.addText(text => text
 				.setPlaceholder('- HH:mm')
 				.setValue(this.plugin.settings.appendLinePrefix)
