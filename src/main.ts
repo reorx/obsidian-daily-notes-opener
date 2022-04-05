@@ -11,6 +11,7 @@ import {
 	getPeriodicNoteSettings, createPeriodicNote,
 } from 'obsidian-daily-notes-interface'
 
+import { appendLine } from './appendline'
 import { addTodayNoteClass, removeTodayNoteClass } from './styles'
 import { FileViewMode, NewTabDirection, openFile } from './utils'
 import { getNotePath } from './vault'
@@ -26,15 +27,15 @@ function debugLog(...args: any[]) {
 interface PluginSettings {
 	endOfDayTime: string;
 	alwaysOpenNewTab: boolean;
-	backgroundColor: string;
-	backgroundColorDark: string;
+	appendLineTargetHeader: string;
+	appendLinePrefix: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
 	alwaysOpenNewTab: false,
-	backgroundColor: '#fefaea',
-	backgroundColorDark: '#2d291f',
+	appendLineTargetHeader: 'Journal',
+	appendLinePrefix: '- HH:mm ',
 }
 
 const getNowShifted = (settings: PluginSettings): moment.Moment => {
@@ -96,22 +97,15 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		}
 	}
 
+	getAppendLinePrefix(): string {
+		return '\n' + window.moment().format(this.settings.appendLinePrefix)
+	}
+
 	async onload() {
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings()
 
-		// add sidebar button
-		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
-			await this.openTodayNoteInNewTab()
-			new Notice('Today\'s daily note opened')
-		})
-		if (DEBUG) {
-			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async (evt: MouseEvent) => {
-				await this.openTodayPeriodicNoteInNewTab('week')
-				new Notice('Today\'s weekly note opened')
-			})
-		}
 
 		// add command
 		this.addCommand({
@@ -121,6 +115,33 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				await this.openTodayNoteInNewTab()
 			}
 		})
+		// add sidebar button
+		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
+			await this.openTodayNoteInNewTab()
+			new Notice('Today\'s daily note opened')
+		})
+
+		const openDailyNoteAndAppendLine = async () => {
+			await this.openTodayNoteInNewTab()
+			debugLog('done openTodayNoteInNewTab')
+
+			// append line
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+			if (!view) {
+				return
+			}
+			debugLog('call appendLine')
+			appendLine(this.app, view, this.settings.appendLineTargetHeader, this.getAppendLinePrefix())
+		}
+		this.addCommand({
+			id: 'open-todays-daily-note-in-new-tab-append-line',
+			name: 'Open today\'s daily note in new tab and append line',
+			callback: openDailyNoteAndAppendLine,
+		})
+		if (DEBUG) {
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab and append line', async (evt: MouseEvent) => { openDailyNoteAndAppendLine() })
+		}
+
 		this.addCommand({
 			id: 'open-todays-weekly-note-in-new-tab',
 			name: 'Open today\'s weekly note in new tab',
@@ -128,6 +149,12 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				this.openTodayPeriodicNoteInNewTab('week')
 			}
 		})
+		if (DEBUG) {
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async (evt: MouseEvent) => {
+				await this.openTodayPeriodicNoteInNewTab('week')
+				new Notice('Today\'s weekly note opened')
+			})
+		}
 
 		// register event
 		this.registerEvent(
@@ -159,9 +186,10 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		// update cachedPeriodicNotes so that event callback could use it
 		this.cachedPeriodicNotes['day'] = todayNotePath
 
-		return this.openInNewTab(todayNotePath, async () => {
+		await this.openInNewTab(todayNotePath, async () => {
 			return createDailyNote(todayTime)
 		}, this.settings.alwaysOpenNewTab)
+		debugLog('done openInNewTab')
 	}
 
 	async openTodayPeriodicNoteInNewTab(type: IGranularity) {
@@ -195,7 +223,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		})
 
 		if (todayNoteLeaf) {
-			todayNoteLeaf.setViewState({
+			await todayNoteLeaf.setViewState({
 				...todayNoteLeaf.getViewState(),
 			}, { focus: true })
 		} else {
@@ -256,5 +284,31 @@ class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Background colors')
 			.setDesc('Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes')
+
+		containerEl.createEl('h2', {text: 'Append Line'})
+
+		new Setting(containerEl)
+			.setName('Append line prefix')
+			.setDesc('Set the prefix for lines added via "Append Line" command, Moment.js syntax is supported.')
+			.addText(text => text
+				.setPlaceholder('- HH:mm')
+				.setValue(this.plugin.settings.appendLinePrefix)
+				.onChange(async (value) => {
+					this.plugin.settings.appendLinePrefix = value
+					await this.plugin.saveSettings()
+				}
+				))
+
+		new Setting(containerEl)
+			.setName('Append line target header')
+			.setDesc('If set, the new line will be appended to the content of target header.')
+			.addText(text => text
+				.setPlaceholder('Journal')
+				.setValue(this.plugin.settings.appendLineTargetHeader)
+				.onChange(async (value) => {
+					this.plugin.settings.appendLineTargetHeader = value
+					await this.plugin.saveSettings()
+				}
+				))
 	}
 }
