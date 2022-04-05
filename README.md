@@ -6,7 +6,8 @@ Features:
 - ⚡️ Provides command and sidebar button for "Open today's daily note in new tab"
 - 🔎 Find and focus on the already opened note to avoid redundancy
 - 🕐 Determine end of day time, let you open the right daily note at midnight
-- 🌈 Colorize the daily note pane to make it outstanding (both light & dark theme)
+- 📝 Append line to a specific section after opening the note
+- 🌈 Colorize the daily note pane to make it outstanding (using [Style Settings](https://github.com/mgmeyers/obsidian-style-settings), support themed colors)
 
 Installation: search for "**Daily notes new tab**" in Community plugins.
 
@@ -55,6 +56,6 @@ This project is made possible by the community surrounding it and especially the
 - [Obsidian Daily Notes interface](https://github.com/liamcain/obsidian-daily-notes-interface)
 - [QuickAdd](https://github.com/chhoumann/quickadd)
 - [Obsidian Style Settings Plugin](https://github.com/mgmeyers/obsidian-style-settings)
-- [Hot-Reload Plugin for Obsidian.md Plugins](https://github.com/pjeby/hot-reload)
+- [Lumberjack](https://github.com/ryanjamurphy/lumberjack-obsidian)
 - [Customizable Sidebar Plugin](https://github.com/phibr0/obsidian-customizable-sidebar)
-- [Auto Class Plugin](https://github.com/OfficerHalf/obsidian-auto-class)
+- [Hot-Reload Plugin for Obsidian.md Plugins](https://github.com/pjeby/hot-reload)
