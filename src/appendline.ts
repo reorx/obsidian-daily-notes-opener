@@ -16,10 +16,10 @@ export const appendLine = (app: App, view: MarkdownView, targetHeader: string, l
 	if (sections && targetHeader) {
 		// need to figure out which line the _next_ section is on, if any, then use that line number in the functions below
 		const targetSection = sections.find((eachSection) => (eachSection.heading === targetHeader)) // does the heading we're looking for exist?
-		if (typeof targetSection !== undefined) { // The target section exists
+		if (targetSection !== undefined) { // The target section exists
 			const nextSection = sections.find((eachSection) => ((eachSection.position.start.line > targetSection.position.start.line) && (eachSection.level <= targetSection.level))) // matches sections _after_ our target, with the same level or greater
 			console.log(nextSection)
-			if (typeof nextSection !== undefined) { // The search for a following section did not return undefined, therefore it exists
+			if (nextSection !== undefined) { // The search for a following section did not return undefined, therefore it exists
 				positionFound = true
 				appendInTargetSection(editor, linePrefix, targetSection, nextSection)
 			} else {
