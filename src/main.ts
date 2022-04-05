@@ -252,5 +252,9 @@ class SettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings()
 				}
 				))
+
+		new Setting(containerEl)
+			.setName('Background colors')
+			.setDesc('Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes')
 	}
 }

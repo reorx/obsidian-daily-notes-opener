@@ -11,15 +11,15 @@ settings:
         opacity: false
         format: hex
         default-light: '#fefaea'
-        default-dark: '#2d291f'
+        default-dark: '#4A3606'
     -
         id: dnnt-week-background
         title: Weekly notes background
         type: variable-themed-color
         opacity: false
         format: hex
-        default-light: '#fefaea'
-        default-dark: '#2d291f'
+        default-light: '#C6E8E4'
+        default-dark: '#0A3837'
 */
 :root {
   --dnnt-day-background: #fefaea;
