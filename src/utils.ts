@@ -1,11 +1,20 @@
 import { App, TFile, ViewState, WorkspaceLeaf } from 'obsidian'
 
-export enum FileViewMode {
-	source = 'source', preview = 'preview', default = 'default'
+export const DEBUG = !(process.env.BUILD_ENV === 'production')
+
+export function debugLog(...args: any[]) {
+	if (DEBUG) {
+		console.log((new Date()).toISOString().slice(11, 23), ...args)
+	}
 }
 
-export enum NewTabDirection {
-	vertical = 'vertical', horizontal = 'horizontal'
+class ExtendedLeaf extends WorkspaceLeaf {
+	containerEl: HTMLElement
+}
+
+export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
+	const extendedLeaf = leaf as ExtendedLeaf
+	return extendedLeaf.containerEl
 }
 
 // Copy from https://github.com/chhoumann/quickadd src/utility.ts
@@ -24,6 +33,15 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
+
+export enum FileViewMode {
+	source = 'source', preview = 'preview', default = 'default'
+}
+
+export enum NewTabDirection {
+	vertical = 'vertical', horizontal = 'horizontal'
+}
+
 export async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
 	let leaf: WorkspaceLeaf
 
@@ -49,13 +67,4 @@ export async function openFile(app: App, file: TFile, optional?: {openInNewTab?:
 		} as ViewState, { focus: optional?.focus })
 	}
 	return leaf
-}
-
-class ExtendedLeaf extends WorkspaceLeaf {
-	containerEl: HTMLElement
-}
-
-export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
-	const extendedLeaf = leaf as ExtendedLeaf
-	return extendedLeaf.containerEl
 }

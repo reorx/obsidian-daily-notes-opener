@@ -1,10 +1,10 @@
 /* TODO
- * - [ ] add lumberjack functionality, allow adding new lines for the daily notes https://github.com/ryanjamurphy/lumberjack-obsidian
+ * - [x] add lumberjack functionality, allow adding new lines for the daily notes https://github.com/ryanjamurphy/lumberjack-obsidian
  * - [ ] add command to open specific files (static name files), customize icon. Then it'll be able to use Customize Sidebar plugin to add these commands to sidebar
  */
 import {
-	App, MarkdownView, Notice, Plugin, PluginSettingTab, Setting,
-	TFile, WorkspaceLeaf,
+	App, MarkdownView, Plugin, PluginSettingTab, Setting, TFile,
+	WorkspaceLeaf,
 } from 'obsidian'
 import {
 	IPeriodicNoteSettings, IGranularity, getDailyNoteSettings, createDailyNote,
@@ -13,16 +13,10 @@ import {
 
 import { appendLine } from './appendline'
 import { addTodayNoteClass, removeTodayNoteClass } from './styles'
-import { FileViewMode, NewTabDirection, openFile } from './utils'
+import {
+	FileViewMode, NewTabDirection, openFile, DEBUG, debugLog,
+} from './utils'
 import { getNotePath } from './vault'
-
-const DEBUG = !(process.env.BUILD_ENV === 'production')
-
-function debugLog(...args: any[]) {
-	if (DEBUG) {
-		console.log(...args)
-	}
-}
 
 interface PluginSettings {
 	endOfDayTime: string;
@@ -85,6 +79,14 @@ const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () =
 	})
 }
 
+const dateTmplRegex = /{{DATE:(.+)}}/gm
+
+const replaceDateTmpl = (s: string, date: moment.Moment): string => {
+	const m = dateTmplRegex.exec(s)
+	if (!m) return s
+	return s.replace(m[0], date.format(m[1]))
+}
+
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings
 	cachedPeriodicNotes: { [key: string]: string} = {}
@@ -98,7 +100,14 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 
 	getAppendLinePrefix(): string {
-		return '\n' + window.moment().format(this.settings.appendLinePrefix)
+		const now = window.moment()
+		let prefix = this.settings.appendLinePrefix
+		let newprefix = replaceDateTmpl(prefix, now)
+		while (prefix !== newprefix) {
+			prefix = newprefix
+			newprefix = replaceDateTmpl(prefix, now)
+		}
+		return '\n' + prefix
 	}
 
 	async onload() {
@@ -107,7 +116,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		await this.loadSettings()
 
 
-		// add command
+		// Command: open-todays-daily-note-in-new-tab
 		this.addCommand({
 			id: 'open-todays-daily-note-in-new-tab',
 			name: 'Open today\'s daily note in new tab',
@@ -115,12 +124,11 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				await this.openTodayNoteInNewTab()
 			}
 		})
-		// add sidebar button
-		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async (evt: MouseEvent) => {
+		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async () => {
 			await this.openTodayNoteInNewTab()
-			new Notice('Today\'s daily note opened')
 		})
 
+		// Command: open-todays-daily-note-in-new-tab-append-line
 		const openDailyNoteAndAppendLine = async () => {
 			await this.openTodayNoteInNewTab()
 			debugLog('done openTodayNoteInNewTab')
@@ -139,9 +147,10 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			callback: openDailyNoteAndAppendLine,
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab and append line', async (evt: MouseEvent) => { openDailyNoteAndAppendLine() })
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab and append line', async () => { openDailyNoteAndAppendLine() })
 		}
 
+		// Command: open-todays-weekly-note-in-new-tab
 		this.addCommand({
 			id: 'open-todays-weekly-note-in-new-tab',
 			name: 'Open today\'s weekly note in new tab',
@@ -150,9 +159,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			}
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async (evt: MouseEvent) => {
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async () => {
 				await this.openTodayPeriodicNoteInNewTab('week')
-				new Notice('Today\'s weekly note opened')
 			})
 		}
 
@@ -285,7 +293,17 @@ class SettingTab extends PluginSettingTab {
 			.setName('Background colors')
 			.setDesc('Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes')
 
-		containerEl.createEl('h2', {text: 'Append Line'})
+		containerEl.createEl('h2', {text: 'Append line'})
+		containerEl.createEl('div', {
+			text: 'Control how "Append line" commands behave, note that this functionality is only avaliable for daily notes',
+			attr: {
+				style: `
+					border: 1px solid #aaa;
+					font-size: .8em;
+					padding: 5px;
+: 5px;				`
+			}
+		})
 
 		new Setting(containerEl)
 			.setName('Append line prefix')
