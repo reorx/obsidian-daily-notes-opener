@@ -12,7 +12,9 @@ import {
 } from 'obsidian-daily-notes-interface'
 
 import { appendLine } from './appendline'
-import { addTodayNoteClass, removeTodayNoteClass } from './styles'
+import {
+	addTodayNoteClass, periodicNoteTypes, removeTodayNoteClass, StyleManger,
+} from './styles'
 import {
 	FileViewMode, NewTabDirection, openFile, DEBUG, debugLog,
 } from './utils'
@@ -21,15 +23,28 @@ import { getNotePath } from './vault'
 interface PluginSettings {
 	endOfDayTime: string;
 	alwaysOpenNewTab: boolean;
+	periodicNotes: {
+		[key: string]: {
+			customizeBackground: boolean;
+		}
+	}
 	appendLineTargetHeader: string;
 	appendLinePrefix: string;
 }
 
+
 const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
 	alwaysOpenNewTab: false,
+	periodicNotes: {},
 	appendLineTargetHeader: 'Journal',
 	appendLinePrefix: '- {{DATE:HH:mm}} ',
+}
+
+for (const _type of periodicNoteTypes) {
+	DEFAULT_SETTINGS.periodicNotes[_type] = {
+		customizeBackground: true,
+	}
 }
 
 const getNowShifted = (settings: PluginSettings): moment.Moment => {
@@ -90,6 +105,7 @@ const replaceDateTmpl = (s: string, date: moment.Moment): string => {
 export default class DailyNotesNewTabPlugin extends Plugin {
 	settings: PluginSettings
 	cachedPeriodicNotes: { [key: string]: string} = {}
+	styleManager: StyleManger
 
 	getPeriodicType(path: string): IGranularity {
 		for (const key in this.cachedPeriodicNotes) {
@@ -114,6 +130,8 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		const pkg = require('../package.json')
 		console.log(`Plugin loading: ${pkg.name} ${pkg.version}`)
 		await this.loadSettings()
+		this.styleManager = new StyleManger()
+		this.setStyle()
 
 
 		// Command: open-todays-daily-note-in-new-tab
@@ -247,6 +265,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 
 	onunload() {
+		this.styleManager.cleanup()
 	}
 
 	async loadSettings() {
@@ -255,6 +274,16 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings)
+	}
+
+	setStyle() {
+		const styledTypes: IGranularity[] = []
+		for (const type in this.settings.periodicNotes) {
+			if (this.settings.periodicNotes[type].customizeBackground) {
+				styledTypes.push(type as IGranularity)
+			}
+		}
+		this.styleManager.setStyle(styledTypes)
 	}
 }
 
@@ -333,6 +362,44 @@ class SettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.appendLineTargetHeader = value
 					await this.plugin.saveSettings()
+				}
+				))
+
+		containerEl.createEl('h2', {text: 'Periodic notes'})
+		containerEl.createEl('div', {
+			text: 'Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes',
+			attr: {
+				style: `
+					border: 1px solid #aaa;
+					font-size: .8em;
+					padding: 5px;
+: 5px;				`
+			}
+		})
+
+		containerEl.createEl('h3', {text: 'Daily'})
+		new Setting(containerEl)
+			.setName('Customize background color')
+			.setDesc('Enable customize background color for daily notes in Style Settings')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.periodicNotes.day.customizeBackground)
+				.onChange(async (value) => {
+					this.plugin.settings.periodicNotes.day.customizeBackground = value
+					await this.plugin.saveSettings()
+					this.plugin.setStyle()
+				}
+				))
+
+		containerEl.createEl('h3', {text: 'Weekly'})
+		new Setting(containerEl)
+			.setName('Customize background color')
+			.setDesc('Enable customize background color for weekly notes in Style Settings')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.periodicNotes.week.customizeBackground)
+				.onChange(async (value) => {
+					this.plugin.settings.periodicNotes.week.customizeBackground = value
+					await this.plugin.saveSettings()
+					this.plugin.setStyle()
 				}
 				))
 	}

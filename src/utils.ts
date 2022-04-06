@@ -17,6 +17,14 @@ export function getContainerElfromLeaf(leaf: WorkspaceLeaf): HTMLElement {
 	return extendedLeaf.containerEl
 }
 
+// eslint-disable-next-line
+export function renderTemplate(tmpl: string, data: any) {
+	for (const key in data) {
+		tmpl = tmpl.replace(new RegExp(`{{${key}}}`, 'g'), data[key])
+	}
+	return tmpl
+}
+
 // Copy from https://github.com/chhoumann/quickadd src/utility.ts
 /*
 MIT License
