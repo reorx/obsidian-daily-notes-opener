@@ -23,19 +23,23 @@ export const removeTodayNoteClass = (leaf: WorkspaceLeaf) => {
 }
 
 const periodicNoteStylesTmpl = `/* style for {{type}} type */
-.periodic-note-{{type}} .view-header,
-.periodic-note-{{type}} .view-header > .view-actions {
-	background-color: var(--dnnt-{{type}}-background) !important;
+{{prefix}} .view-header,
+{{prefix}} .view-header > .view-actions,
+{{prefix}} .workspace-leaf-header,
+{{prefix}}.workspace-leaf.mod-active .view-header,
+.workspace-split.mod-root>{{prefix}}.workspace-leaf:first-of-type:last-of-type .view-header
+{
+	{{backgroundCss}}
 }
 
-.periodic-note-{{type}} .markdown-source-view,
-.periodic-note-{{type}} .markdown-reading-view {
-	background-color: var(--dnnt-{{type}}-background) !important;
+{{prefix}} .markdown-source-view,
+{{prefix}} .markdown-reading-view {
+	{{backgroundCss}}
 }
 
-.periodic-note-{{type}} .CodeMirror-gutter.CodeMirror-linenumbers,
-.periodic-note-{{type}} .CodeMirror-gutter.CodeMirror-foldgutter {
-	background-color: var(--dnnt-{{type}}-background) !important;
+{{prefix}} .CodeMirror-gutter.CodeMirror-linenumbers,
+{{prefix}} .CodeMirror-gutter.CodeMirror-foldgutter {
+	{{backgroundCss}}
 }
 `
 
@@ -48,7 +52,12 @@ export class StyleManger  {
 	}
 
 	makePeriodicNoteStyles(type: IGranularity): string {
-		return renderTemplate(periodicNoteStylesTmpl, { type })
+		return renderTemplate(periodicNoteStylesTmpl, {
+			type,
+			// prefix class is by the side of .workspace-leaf
+			prefix: `.periodic-note-${type}`,
+			backgroundCss: `background-color: var(--dnnt-${type}-background) !important;`
+		})
 	}
 
 	setStyle(types: IGranularity[]) {
@@ -56,7 +65,7 @@ export class StyleManger  {
 		for (const type of types) {
 			text += this.makePeriodicNoteStyles(type)
 		}
-		console.log('setStyle', text)
+		// debugLog('setStyle', text)
 		this.styleTag.innerText = text.trim().replace(/[\r\n\s]+/g, ' ')
 	}
 
