@@ -235,6 +235,13 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				...todayNoteLeaf.getViewState(),
 			}, { focus: true })
 		} else {
+			const { activeLeaf } = this.app.workspace
+			if (activeLeaf && activeLeaf.view && activeLeaf.view.getViewType() === 'empty') {
+				// if active view has no file opened, just open note in the active view
+				const file = this.app.vault.getAbstractFileByPath(filePath) as TFile
+				await activeLeaf.openFile(file)
+				return
+			}
 			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
 		}
 	}
