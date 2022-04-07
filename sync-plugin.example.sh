@@ -1,8 +1,11 @@
 #!/bin/bash
 
 PLUGINS_DIR=""
-PLUGIN_DIR_NAME="obsidian-daily-notes-new-tab"
+PLUGIN_PATH="$PLUGINS_DIR/$(basename "$PWD")"
 
-mkdir -p "$PLUGINS_DIR/$PLUGIN_DIR_NAME"
-rsync -a main.js manifest.json "$PLUGINS_DIR/$PLUGIN_DIR_NAME"
-touch "$PLUGINS_DIR/$PLUGIN_DIR_NAME/.hotreload"
+mkdir -p "$PLUGIN_PATH"
+rsync -a build/* manifest.json "$PLUGIN_PATH"
+# if .hotreload does not exist, touch it
+if [ ! -f "$PLUGIN_PATH/.hotreload" ]; then
+    touch "$PLUGIN_PATH/.hotreload"
+fi
