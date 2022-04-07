@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-daily-notes-opener",
-	"version": "1.5.1",
+	"version": "1.5.2",
 	"description": "Easily open daily/periodic notes in new pane, and much more!",
 	"main": "main.js",
 	"scripts": {
