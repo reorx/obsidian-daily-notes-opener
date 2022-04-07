@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-daily-notes-new-tab",
+	"name": "obsidian-daily-notes-opener",
 	"version": "1.5.1",
-	"description": "Easily open daily notes for today in new tab, and much more!",
+	"description": "Easily open daily/periodic notes in new pane, and much more!",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

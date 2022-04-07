@@ -16,13 +16,13 @@ import {
 	addTodayNoteClass, periodicNoteTypes, removeTodayNoteClass, StyleManger,
 } from './styles'
 import {
-	FileViewMode, NewTabDirection, openFile, DEBUG, debugLog,
+	FileViewMode, NewPaneDirection, openFile, DEBUG, debugLog,
 } from './utils'
 import { getNotePath } from './vault'
 
 interface PluginSettings {
 	endOfDayTime: string;
-	alwaysOpenNewTab: boolean;
+	alwaysOpenNewPane: boolean;
 	periodicNotes: {
 		[key: string]: {
 			customizeBackground: boolean;
@@ -35,7 +35,7 @@ interface PluginSettings {
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	endOfDayTime: '05:00',
-	alwaysOpenNewTab: false,
+	alwaysOpenNewPane: false,
 	periodicNotes: {},
 	appendLineTargetHeader: 'Journal',
 	appendLinePrefix: '- {{DATE:HH:mm}} ',
@@ -79,16 +79,16 @@ const getTodayPeriodicNotePath = (settings: PluginSettings, periodicSettings: IP
 	return [getNotePath(folder, nowShifted.format(format)), nowShifted]
 }
 
-const openOrCreateInNewTab = async (app: App, path: string, createFileFunc: () => Promise<TFile>, mode: FileViewMode) => {
-	console.debug('openOrCreateInNewTab', path)
+const openOrCreateInNewPane = async (app: App, path: string, createFileFunc: () => Promise<TFile>, mode: FileViewMode) => {
+	console.debug('openOrCreateInNewPane', path)
 	let file = app.vault.getAbstractFileByPath(path) as TFile
 	if (!(file instanceof TFile)) {
 		debugLog('create today note:', path)
 		file = await createFileFunc()
 	}
 	await openFile(app, file, {
-		openInNewTab: true,
-		direction: NewTabDirection.vertical,
+		openInNewPane: true,
+		direction: NewPaneDirection.vertical,
 		focus: true,
 		mode,
 	})
@@ -102,7 +102,7 @@ const replaceDateTmpl = (s: string, date: moment.Moment): string => {
 	return s.replace(m[0], date.format(m[1]))
 }
 
-export default class DailyNotesNewTabPlugin extends Plugin {
+export default class DailyNotesNewPanePlugin extends Plugin {
 	settings: PluginSettings
 	cachedPeriodicNotes: { [key: string]: string} = {}
 	styleManager: StyleManger
@@ -134,22 +134,22 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		this.setStyle()
 
 
-		// Command: open-todays-daily-note-in-new-tab
+		// Command: open-todays-daily-note-in-new-pane
 		this.addCommand({
-			id: 'open-todays-daily-note-in-new-tab',
-			name: 'Open today\'s daily note in new tab',
+			id: 'open-todays-daily-note-in-new-pane',
+			name: 'Open today\'s daily note in new pane',
 			callback: async () => {
-				await this.openTodayNoteInNewTab()
+				await this.openTodayNoteInNewPane()
 			}
 		})
-		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab', async () => {
-			await this.openTodayNoteInNewTab()
+		this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new pane', async () => {
+			await this.openTodayNoteInNewPane()
 		})
 
-		// Command: open-todays-daily-note-in-new-tab-append-line
+		// Command: open-todays-daily-note-in-new-pane-append-line
 		const openDailyNoteAndAppendLine = async () => {
-			await this.openTodayNoteInNewTab()
-			debugLog('done openTodayNoteInNewTab')
+			await this.openTodayNoteInNewPane()
+			debugLog('done openTodayNoteInNewPane')
 
 			// append line
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView)
@@ -160,25 +160,25 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 			appendLine(this.app, view, this.settings.appendLineTargetHeader, this.getAppendLinePrefix())
 		}
 		this.addCommand({
-			id: 'open-todays-daily-note-in-new-tab-append-line',
-			name: 'Open today\'s daily note in new tab and append line',
+			id: 'open-todays-daily-note-in-new-pane-append-line',
+			name: 'Open today\'s daily note in new pane and append line',
 			callback: openDailyNoteAndAppendLine,
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new tab and append line', async () => { openDailyNoteAndAppendLine() })
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s daily note in new pane and append line', async () => { openDailyNoteAndAppendLine() })
 		}
 
-		// Command: open-todays-weekly-note-in-new-tab
+		// Command: open-todays-weekly-note-in-new-pane
 		this.addCommand({
-			id: 'open-todays-weekly-note-in-new-tab',
-			name: 'Open today\'s weekly note in new tab',
+			id: 'open-todays-weekly-note-in-new-pane',
+			name: 'Open today\'s weekly note in new pane',
 			callback: () => {
-				this.openTodayPeriodicNoteInNewTab('week')
+				this.openTodayPeriodicNoteInNewPane('week')
 			}
 		})
 		if (DEBUG) {
-			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new tab', async () => {
-				await this.openTodayPeriodicNoteInNewTab('week')
+			this.addRibbonIcon('calendar-with-checkmark', 'Open today\'s weekly note in new pane', async () => {
+				await this.openTodayPeriodicNoteInNewPane('week')
 			})
 		}
 
@@ -203,39 +203,39 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 		)
 
 		// add settings tab
-		this.addSettingTab(new SettingTab(this.app, this))
+		this.addSettingTab(new SettingPane(this.app, this))
 	}
 
-	async openTodayNoteInNewTab() {
+	async openTodayNoteInNewPane() {
 		const periodicSettings = getDailyNoteSettings()
 		const [todayNotePath, todayTime] = getTodayNotePath(this.settings, periodicSettings)
 		// update cachedPeriodicNotes so that event callback could use it
 		this.cachedPeriodicNotes['day'] = todayNotePath
 
-		await this.openInNewTab(todayNotePath, async () => {
+		await this.openInNewPane(todayNotePath, async () => {
 			return createDailyNote(todayTime)
-		}, this.settings.alwaysOpenNewTab)
-		debugLog('done openInNewTab')
+		}, this.settings.alwaysOpenNewPane)
+		debugLog('done openInNewPane')
 	}
 
-	async openTodayPeriodicNoteInNewTab(type: IGranularity) {
+	async openTodayPeriodicNoteInNewPane(type: IGranularity) {
 		const periodicSettings = getPeriodicNoteSettings(type)
 		const [todayNotePath, todayTime] = getTodayPeriodicNotePath(this.settings, periodicSettings)
 		// update cachedPeriodicNotes so that event callback could use it
 		this.cachedPeriodicNotes[type] = todayNotePath
 
-		return this.openInNewTab(todayNotePath, async () => {
+		return this.openInNewPane(todayNotePath, async () => {
 			return createPeriodicNote(type, todayTime)
-		}, this.settings.alwaysOpenNewTab)
+		}, this.settings.alwaysOpenNewPane)
 	}
 
-	async openInNewTab(filePath: string, createFileFunc: () => Promise<TFile>, forceNewTab = false, mode: FileViewMode = FileViewMode.default) {
-		if (forceNewTab) {
-			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
+	async openInNewPane(filePath: string, createFileFunc: () => Promise<TFile>, forceNewPane = false, mode: FileViewMode = FileViewMode.default) {
+		if (forceNewPane) {
+			await openOrCreateInNewPane(this.app, filePath, createFileFunc, mode)
 			return
 		}
 
-		// try to find a existing tab, if multiple tabs are open, only the last one will be used
+		// try to find a existing pane, if multiple panes are open, only the last one will be used
 		let todayNoteLeaf: WorkspaceLeaf
 		this.app.workspace.getLeavesOfType('markdown').forEach(leaf => {
 			// check if leaf's file is today's note
@@ -260,7 +260,7 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 				await activeLeaf.openFile(file)
 				return
 			}
-			await openOrCreateInNewTab(this.app, filePath, createFileFunc, mode)
+			await openOrCreateInNewPane(this.app, filePath, createFileFunc, mode)
 		}
 	}
 
@@ -287,10 +287,10 @@ export default class DailyNotesNewTabPlugin extends Plugin {
 	}
 }
 
-class SettingTab extends PluginSettingTab {
-	plugin: DailyNotesNewTabPlugin
+class SettingPane extends PluginSettingTab {
+	plugin: DailyNotesNewPanePlugin
 
-	constructor(app: App, plugin: DailyNotesNewTabPlugin) {
+	constructor(app: App, plugin: DailyNotesNewPanePlugin) {
 		super(app, plugin)
 		this.plugin = plugin
 	}
@@ -315,19 +315,19 @@ class SettingTab extends PluginSettingTab {
 				))
 
 		new Setting(containerEl)
-			.setName('Always open new tab')
-			.setDesc('Set true to always open new tab even if the daily note is already opened, otherwise the plugin will try to find the existing daily note and focus on it')
+			.setName('Always open new pane')
+			.setDesc('Set true to always open new pane even if the daily note is already opened, otherwise the plugin will try to find the existing daily note and focus on it')
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.alwaysOpenNewTab)
+				.setValue(this.plugin.settings.alwaysOpenNewPane)
 				.onChange(async (value) => {
-					this.plugin.settings.alwaysOpenNewTab = value
+					this.plugin.settings.alwaysOpenNewPane = value
 					await this.plugin.saveSettings()
 				}
 				))
 
 		new Setting(containerEl)
 			.setName('Background colors')
-			.setDesc('Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes')
+			.setDesc('Daily notes new pane plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes')
 
 		containerEl.createEl('h2', {text: 'Append line'})
 		containerEl.createEl('div', {
@@ -367,7 +367,7 @@ class SettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h2', {text: 'Periodic notes'})
 		containerEl.createEl('div', {
-			text: 'Daily notes new tab plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes',
+			text: 'Daily notes new pane plugin adds support for colorizing today\'s periodic note, this functionality relies on another plugin called "Style Settings", please install and enable it so that you can adjust background colors for periodic notes',
 			attr: {
 				style: `
 					border: 1px solid #aaa;

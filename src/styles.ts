@@ -48,7 +48,7 @@ export class StyleManger  {
 
 	constructor() {
 		this.styleTag = document.head.createEl('style')
-		this.styleTag.id = 'daily-notes-new-tab-style'
+		this.styleTag.id = 'daily-notes-new-pane-style'
 	}
 
 	makePeriodicNoteStyles(type: IGranularity): string {

@@ -46,14 +46,14 @@ export enum FileViewMode {
 	source = 'source', preview = 'preview', default = 'default'
 }
 
-export enum NewTabDirection {
+export enum NewPaneDirection {
 	vertical = 'vertical', horizontal = 'horizontal'
 }
 
-export async function openFile(app: App, file: TFile, optional?: {openInNewTab?: boolean, direction?: NewTabDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
+export async function openFile(app: App, file: TFile, optional?: {openInNewPane?: boolean, direction?: NewPaneDirection, mode?: FileViewMode, focus?: boolean}): Promise<WorkspaceLeaf> {
 	let leaf: WorkspaceLeaf
 
-	if (optional?.openInNewTab && optional?.direction) {
+	if (optional?.openInNewPane && optional?.direction) {
 		leaf = app.workspace.splitActiveLeaf(optional.direction)
 	} else {
 		leaf = app.workspace.getUnpinnedLeaf()
