@@ -46,6 +46,10 @@ Installation: search for "**Daily notes opener**" in Community plugins.
 - Q: Does this work with [Periodic Notes](https://github.com/liamcain/obsidian-periodic-notes)?
 
 	A: Yes, if *Daily Notes* in the **Periodic Notes** plugin is enabled, it will use settings from Periodic Notes, otherwise, it will use settings from the **Daily notes core plugin**.
+	
+- Q: I cannot see the "Daily notes opener" section in Style Settings.
+
+	A: Please try disabling then enabling the Style Settings plugin.
 
 ## Credits
 
