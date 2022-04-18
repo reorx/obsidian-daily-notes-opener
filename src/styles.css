@@ -2,10 +2,10 @@
 
 _: '@preserve'
 name: Daily notes opener
-id: daily-notes-new-pane
+id: daily-notes-opener
 settings:
     -
-        id: dnnt-day-background
+        id: dno-day-background
         title: Daily notes background
         type: variable-themed-color
         opacity: false
@@ -13,7 +13,7 @@ settings:
         default-light: '#fefaea'
         default-dark: '#4A3606'
     -
-        id: dnnt-week-background
+        id: dno-week-background
         title: Weekly notes background
         type: variable-themed-color
         opacity: false
@@ -22,6 +22,6 @@ settings:
         default-dark: '#0A3837'
 */
 :root {
-  --dnnt-day-background: #fefaea;
-  --dnnt-week-background: #fefaea;
+  --dno-day-background: #fefaea;
+  --dno-week-background: #fefaea;
 }

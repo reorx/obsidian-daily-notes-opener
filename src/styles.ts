@@ -48,7 +48,7 @@ export class StyleManger  {
 
 	constructor() {
 		this.styleTag = document.head.createEl('style')
-		this.styleTag.id = 'daily-notes-new-pane-style'
+		this.styleTag.id = 'daily-notes-opener-style'
 	}
 
 	makePeriodicNoteStyles(type: IGranularity): string {
@@ -56,7 +56,7 @@ export class StyleManger  {
 			type,
 			// prefix class is by the side of .workspace-leaf
 			prefix: `.periodic-note-${type}`,
-			backgroundCss: `background-color: var(--dnnt-${type}-background) !important;`
+			backgroundCss: `background-color: var(--dno-${type}-background) !important;`
 		})
 	}
 

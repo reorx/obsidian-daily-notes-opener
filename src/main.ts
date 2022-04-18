@@ -146,7 +146,6 @@ export default class DailyNotesNewPanePlugin extends Plugin {
 			await this.openTodayNoteInNewPane()
 		})
 
-		// Command: open-todays-daily-note-in-new-pane-append-line
 		const openDailyNoteAndAppendLine = async () => {
 			await this.openTodayNoteInNewPane()
 			debugLog('done openTodayNoteInNewPane')
@@ -159,6 +158,7 @@ export default class DailyNotesNewPanePlugin extends Plugin {
 			debugLog('call appendLine')
 			appendLine(this.app, view, this.settings.appendLineTargetHeader, this.getAppendLinePrefix())
 		}
+		// Command: open-todays-daily-note-in-new-pane-append-line
 		this.addCommand({
 			id: 'open-todays-daily-note-in-new-pane-append-line',
 			name: 'Open today\'s daily note in new pane and append line',
